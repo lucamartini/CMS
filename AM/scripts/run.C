@@ -1,0 +1,1 @@
+{ gROOT->ProcessLine(".L do_pattern_effs.C+"); gROOT->ProcessLine("do_pattern_effs(\"/gpfs/ddn/cms/user/martini/AM/PatternRecognitionAnalysis/BE_5D/Eta6_Phi8_ter/MU_612_SLHC6._612_SLHC6_MUBANK_lo3midhig_sec8_ss64_cov0.7_dc3_fk2._PRA.root\",8,6)"); }
