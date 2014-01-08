@@ -18,6 +18,16 @@ int main(int argc, char* argv[]) {
 	rtf.drawHitsConf();
 	rtf.GetFromConfToCircle();
 
+	rtf.fillPQGrid();
+	rtf.drawPQGrid();
+
+	rtf.findMaxima();
+	rtf.printMaxima();
+	rtf.drawHitsConfRetina();
+
+	rtf.getCircles();
+	rtf.drawCircles();
+
 	return 0;
 }
 

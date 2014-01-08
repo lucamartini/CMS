@@ -20,8 +20,8 @@ NGLIBS         = $(ROOTGLIBS)
 GLIBS          = $(filter-out -lNew, $(NGLIBS))
 
 INCLUDEDIR       = ./
-BOOST		= -I/usr/local/boost_1_55_0
-CXX	         += -I$(INCLUDEDIR)
+#BOOST		= -I/usr/local/boost_1_55_0
+CXX	         += -I$(INCLUDEDIR) $(BOOST)
 
 .SUFFIXES: .cc,.C,.hh,.h
 .PREFIXES: ../../../../../lib/
@@ -30,13 +30,13 @@ CXX	         += -I$(INCLUDEDIR)
 # TARGETS #
 ###########
 
-all: makeRetina
+all: makeRetina 
 
 makeRetina: makeRetina.cc RetinaTrackFitter
-		$(CXX) $(CXXFLAGS) $(BOOST) -o makeRetina.o  RetinaTrackFitter.o $(GLIBS)  $(LDFLAGS)  $<
+		$(CXX) $(CXXFLAGS) -o makeRetina.o RetinaTrackFitter.o $(GLIBS)  $(LDFLAGS)  $<
 
 RetinaTrackFitter: RetinaTrackFitter.cpp
-		$(CXX) $(CXXFLAGS) $(BOOST) -c RetinaTrackFitter.cpp
+		$(CXX) $(CXXFLAGS) -c RetinaTrackFitter.cpp -o RetinaTrackFitter.o
 
 clean:
 	rm -f *.o *~
