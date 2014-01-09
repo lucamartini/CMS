@@ -49,11 +49,11 @@ struct circlePoint {
 
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter();
+	RetinaTrackFitter(double a_gen, double b_gen, bool parabola = false, string name = "");
 	virtual ~RetinaTrackFitter();
 
-	void setHits();
-	void cleanHits(double ymin, double ymax, double xmin, double xmax);
+	unsigned int setHits();
+	unsigned int cleanHits(double ymin, double ymax, double xmin, double xmax);
 	void drawHits();
 	void setConfHits();
 	void drawHitsConf();
@@ -68,7 +68,6 @@ public:
 
 
 private:
-
 
 	inline double get_u(double x, double y) { return x / (x*x + y*y);};
 	inline double get_v(double x, double y) { return y / (x*x + y*y);};
@@ -91,20 +90,25 @@ private:
   vector <pqPoint> pqCollection;
   vector <circlePoint> circleCollection;
 
-  double a_gen;
-  double b_gen;
+  double a_gen_;
+  double b_gen_;
+  unsigned int pbins;
+  unsigned int qbins;
+  double pmin;
+  double pmax;
+  double qmin;
+  double qmax;
+  double sigma;
+
   double a_L1f;
   double b_L1f;
   double p;
   double q;
   TGraph * hitsConf_h;
 
-  unsigned int pbins;
-  unsigned int qbins;
-  double qmin, qmax;
-  double pmin, pmax;
+  bool parabola_b;
 
-  double sigma;
+  string name_;
 
 };
 
