@@ -18,6 +18,7 @@
 #include "TF1.h"
 #include "TH2D.h"
 #include "TStyle.h"
+#include "TPaveText.h"
 
 using namespace std;
 
@@ -49,7 +50,7 @@ struct circlePoint {
 
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter(double a_gen, double b_gen, bool parabola = false, string name = "");
+	RetinaTrackFitter(double R_gen, double phi0_gen, bool parabola = false, string name = "");
 	virtual ~RetinaTrackFitter();
 
 	unsigned int setHits();
@@ -69,6 +70,10 @@ public:
 
 private:
 
+	inline double get_x_from_pol(double r, double phi) { return r*cos(phi);};
+	inline double get_y_from_pol(double r, double phi) { return r*sin(phi);};
+	inline double get_phi_from_car(double x, double y) { return atan(y/x);};
+
 	inline double get_u(double x, double y) { return x / (x*x + y*y);};
 	inline double get_v(double x, double y) { return y / (x*x + y*y);};
 	inline double get_x(double u, double v) { return u / (u*u + v*v);};
@@ -79,9 +84,13 @@ private:
 	inline double get_p(double a, double b) { return -1. * a / b;};
 	inline double get_q(double a, double b) { return 1. / (2 * b) ;};
 
+	void setGeometry();
 	void makeGrid();
 	double getResponse(double p_temp, double q_temp);
+
 	pqPoint findMaximumInterpolated(pqPoint_i point_i);
+
+	vector < double > barrel_layer_r;
 
   vector <vector <double> > Grid;
   vector <hit> HitCollection;
@@ -90,6 +99,10 @@ private:
   vector <pqPoint> pqCollection;
   vector <circlePoint> circleCollection;
 
+  double pi;
+
+  double R_gen_;
+  double phi0_gen_;
   double a_gen_;
   double b_gen_;
   unsigned int pbins;

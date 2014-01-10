@@ -7,54 +7,85 @@
 
 #include "RetinaTrackFitter.h"
 
-RetinaTrackFitter::RetinaTrackFitter(double a_gen, double b_gen, bool parabola, string name) :
-	a_gen_(a_gen),
-	b_gen_(b_gen),
+RetinaTrackFitter::RetinaTrackFitter(double R_gen, double phi0_gen, bool parabola, string name) :
+	R_gen_(R_gen),
+	phi0_gen_(phi0_gen),
 	pbins(21),
   qbins(21),
-  pmin(-0.008),
-  pmax(0.008),
-  qmin(0.01),
-  qmax(0.05),
-  sigma(0.02),
+  pmin(0.0),
+  pmax(5.0),
+  qmin(-0.02),
+  qmax(0.02),
+  sigma(0.001),
   parabola_b(parabola),
   name_(name)
 {
-	cout << "CIRCLE GENERATED: a = " << a_gen_ << "  b = " << b_gen_ << endl;
 	hitsConf_h = new TGraph(0);
+	pi = acos(-1);
+	a_gen_ = get_x_from_pol(R_gen_, phi0_gen_);
+	b_gen_ = get_y_from_pol(R_gen_, phi0_gen_);
+	cout << "CIRCLE GENERATED: a = " << a_gen_ << "  b = " << b_gen_ << endl;
 
+	setGeometry();
 	makeGrid();
 }
 
 RetinaTrackFitter::~RetinaTrackFitter() {
 }
 
+void RetinaTrackFitter::setGeometry() {
+	barrel_layer_r.push_back(23.0);
+	barrel_layer_r.push_back(35.7);
+	barrel_layer_r.push_back(50.8);
+	barrel_layer_r.push_back(68.6);
+	barrel_layer_r.push_back(88.8);
+	barrel_layer_r.push_back(108.0);
+}
+
 unsigned int RetinaTrackFitter::setHits() {
 	TRandom3 rand;
 
-	for (double i = 0.25; i <= 10.; i = i + 0.25) {
+	unsigned int  barrel_layer_size = barrel_layer_r.size();
+	for (unsigned int i = 0; i < barrel_layer_size; i++) {
 		double spread = 0;
 		spread = rand.Gaus(0, 0.01);
 		spread = 0;
-		double x = i;
-		double y = 0;
-//	x = (y - 3) / 2 + spread;  // line
-//		double R_sq = a_gen_*a_gen_ + b_gen_*b_gen_;
-		double radicand = b_gen_*b_gen_ - x*x + 2*a_gen_*x;
-		if (radicand < 0) continue;
-		y = b_gen_ + sqrt(radicand); // higher
+		double r = barrel_layer_r[i];
+		double ratio = barrel_layer_r[i] / (2*R_gen_);
+		if (ratio < -1. || ratio > 1.) continue;
+//		cout << "ratio " << ratio  << " acos = " << acos(ratio) << endl;
+//		double aratio = acos(ratio);
+		double phi = acos(ratio) + phi0_gen_;
+		while (phi > 2*pi) phi -= 2*pi;
+		while (phi < 0.) phi += 2*pi;
+		double x = get_x_from_pol(r, phi);
+		double y = get_y_from_pol(r, phi);
 		hit hit_i;
 		hit_i.x = x + spread;
 		hit_i.y = y;
-//		HitCollection.push_back(hit_i);
-		y = b_gen_ - sqrt(radicand); // lower
-		spread = rand.Gaus(0, 0.01);
-		spread = 0;
-		hit_i.y = y;
-		hit_i.x = x + spread;
-		HitCollection.push_back(hit_i);
+//		cout << "======== phi = " << phi;
+		if (phi < acos(-1)/2.) {
+			cout << "phi, x, y " << phi << "  " <<  x << "  " << y << endl;
+			HitCollection.push_back(hit_i); // only if first quadrant
+		}
+//		cout << "r,phi = " << r << " " << phi << "   x,y = " << x << " " << y << ":  ";
+		phi = -1*acos(ratio) + phi0_gen_;
+		while (phi > 2*pi) phi -= 2*pi;
+		while (phi < 0.) phi += 2*pi;
+//		cout << "======== phi = " << phi << endl;
+		x = get_x_from_pol(r, phi);
+		y = get_y_from_pol(r, phi);
+		hit hit_j;
+		hit_j.x = x + spread;
+		hit_j.y = y;
+		if (phi < acos(-1)/2.) {
+			cout << "phi, x, y " << phi << "  " <<  x << "  " << y << endl;
+			HitCollection.push_back(hit_j); // only if first quadrant
+		}
+//		cout << "    r,phi = " << r << " " << phi << "    ";
+//		cout << barrel_layer_r[i] << " = " << sqrt(x*x + y*y) << " ?  ";
+//		cout << sqrt(a_gen_*a_gen_ + b_gen_*b_gen_) << " = " << sqrt((x-a_gen_)*(x-a_gen_) + (y-b_gen_)*(y-b_gen_)) << " ?" << endl << endl;
 	}
-
 	return HitCollection.size();
 }
 
@@ -79,10 +110,10 @@ void RetinaTrackFitter::drawHits() {
 		hits_h.SetPoint(hit_i, HitCollection[hit_i].x, HitCollection[hit_i].y);
 	}
 	TCanvas c("c", "c", 600, 600);
-	hits_h.GetXaxis()->SetLimits(0.,5.);
-	hits_h.GetYaxis()->SetRangeUser(0.,5.);
-	hits_h.GetXaxis()->SetTitle("x");
-	hits_h.GetYaxis()->SetTitle("y");
+//	hits_h.GetXaxis()->SetLimits(0.,300.);
+//	hits_h.GetYaxis()->SetRangeUser(0.,300.);
+	hits_h.GetXaxis()->SetTitle("x[cm]");
+	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
 	c.Update();
 	c.Print(Form("hits_%s.pdf", name_.c_str()));
@@ -111,8 +142,8 @@ void RetinaTrackFitter::drawHitsConf() {
 	}
 	TCanvas c("c", "c", 600, 600);
 	gStyle->SetOptFit(1111);
-	hitsConf_h->GetXaxis()->SetTitle("u");
-	hitsConf_h->GetYaxis()->SetTitle("v");
+	hitsConf_h->GetXaxis()->SetTitle("u[cm^{-1}]");
+	hitsConf_h->GetYaxis()->SetTitle("v[cm^{-1}]");
 	hitsConf_h->Draw("A*");
 	hitsConf_h->Fit("pol1");
 	TF1* fun = hitsConf_h->GetFunction("pol1");
@@ -168,7 +199,7 @@ double RetinaTrackFitter::getResponse(double p_temp, double q_temp) {
 
 void RetinaTrackFitter::drawPQGrid() {
 //  TH2D pq_h("pq_h", "pq grid;p;q", pbins-1, pmin - (pmax-pmin)/pbins/2, pmax - (pmax-pmin)/pbins*3/2, qbins-1, qmin - (qmax-qmin)/qbins/2, qmax - (qmax-qmin)/qbins*3/2);
-  TH2D pq_h("pq_h", "pq grid;p;q", pbins-1, pmin - (pmax-pmin)/pbins/2, pmax - (pmax-pmin)/pbins*3/2, qbins-1, qmin - (qmax-qmin)/qbins/2, qmax - (qmax-qmin)/qbins*3/2);
+  TH2D pq_h("pq_h", "pq grid;p;q[cm^{-1}]", pbins-1, pmin - (pmax-pmin)/pbins/2, pmax - (pmax-pmin)/pbins*3/2, qbins-1, qmin - (qmax-qmin)/qbins/2, qmax - (qmax-qmin)/qbins*3/2);
 	for (unsigned int i = 0; i < pbins; i++) {
 		for (unsigned int j = 0; j < qbins; j++) {
 			pq_h.SetBinContent(i+1, j+1, Grid[i][j]);
@@ -195,7 +226,7 @@ void RetinaTrackFitter::findMaxima() {
 	        && Grid[i][j] > Grid[i-1][j-1]
 	        && Grid[i][j] > Grid[i-1][j+1]
 	 ) {
-				if (Grid[i][j] < 0.1) continue; // cleaning
+				if (Grid[i][j] < 0.25) continue; // cleaning
 				pqPoint_i point_i;
 				point_i.p = i;
 				point_i.q = j;
@@ -249,8 +280,8 @@ void RetinaTrackFitter::drawHitsConfRetina() {
 	}
 	TCanvas cc("cc", "cc", 600, 600);
 //		gStyle->SetOptFit(1111);
-	hitsConf_g.GetXaxis()->SetTitle("u");
-	hitsConf_g.GetYaxis()->SetTitle("v");
+	hitsConf_g.GetXaxis()->SetTitle("u[cm^{-1}]");
+	hitsConf_g.GetYaxis()->SetTitle("v[cm^{-1}]");
 	hitsConf_g.Draw("A*");
 
 	TF1* fun = hitsConf_h->GetFunction("pol1");
@@ -291,14 +322,17 @@ void RetinaTrackFitter::drawCircles() {
 		hits_h.SetPoint(hit_i, HitCollection[hit_i].x, HitCollection[hit_i].y);
 	}
 	TCanvas c("c", "c", 600, 600);
-	hits_h.GetXaxis()->SetLimits(0.,5.);
-	hits_h.GetYaxis()->SetRangeUser(0.,5.);
-	hits_h.GetXaxis()->SetTitle("x");
-	hits_h.GetYaxis()->SetTitle("y");
+//	hits_h.GetXaxis()->SetLimits(0.,5.);
+//	hits_h.GetYaxis()->SetRangeUser(0.,5.);
+	hits_h.GetXaxis()->SetTitle("x[cm]");
+	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
 
-	TF1 * circle_origin = new TF1( "circle_origin", "[1] - sqrt([2] - (x - [0])*(x - [0]) )", 0., 5.);
-	circle_origin->SetParameters(a_gen_, b_gen_, a_gen_*a_gen_ + b_gen_*b_gen_);
+	string circle_leg;
+	if (a_gen_ < 0.) circle_leg = "[1] - sqrt([1]*[1] + 2*[0]*x - x*x)";
+	else circle_leg = "[1] + sqrt([1]*[1] + 2*[0]*x - x*x)";
+	TF1 * circle_origin = new TF1( "circle_origin", circle_leg.c_str(), 0., 300.);
+	circle_origin->SetParameters(a_gen_, b_gen_);
 	circle_origin->SetLineStyle(2);
 	circle_origin->Draw("same");
 
@@ -308,11 +342,13 @@ void RetinaTrackFitter::drawCircles() {
 	for (unsigned int circle_i = 0; circle_i < circles_size; circle_i++) {
 		double a = circleCollection[circle_i].a;
 		double b = circleCollection[circle_i].b;
-		double R_sq = a*a + b*b;
-		circle_f[circle_i] = new TF1( Form("circle_%i", circle_i), "[1] - sqrt([2] - (x - [0])*(x - [0]) )", 0., 5.);
-		circle_f[circle_i]->SetParameters(a, b, R_sq);
+		if (a < 0.) circle_leg = "[1] - sqrt([1]*[1] + 2*[0]*x - x*x)";
+		else circle_leg = "[1] + sqrt([1]*[1] + 2*[0]*x - x*x)";
+		circle_f[circle_i] = new TF1( Form("circle_%i", circle_i), circle_leg.c_str(), 0., 300.);
+		circle_f[circle_i]->SetParameters(a, b);
 		circle_f[circle_i]->SetLineColor(kBlue + circle_i);
 		circle_f[circle_i]->Draw("same");
 	}
+
 	c.Print(Form("hitsRetina_%s.pdf", name_.c_str()));
 }
