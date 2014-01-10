@@ -79,9 +79,13 @@ private:
 	inline double get_p(double a, double b) { return -1. * a / b;};
 	inline double get_q(double a, double b) { return 1. / (2 * b) ;};
 
+	void setGeometry();
 	void makeGrid();
 	double getResponse(double p_temp, double q_temp);
+
 	pqPoint findMaximumInterpolated(pqPoint_i point_i);
+
+	vector < double > barrel_layer_r;
 
   vector <vector <double> > Grid;
   vector <hit> HitCollection;
