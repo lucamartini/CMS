@@ -11,7 +11,7 @@
 #include <vector>
 #include <iostream>
 #include <math.h>
-#include "TRandom3.h"
+
 #include "TGraph.h"
 #include "TCanvas.h"
 #include "TAxis.h"
@@ -19,42 +19,23 @@
 #include "TH2D.h"
 #include "TStyle.h"
 #include "TPaveText.h"
+#include "TEllipse.h"
+
+#include "CommonFuncs.h"
 
 using namespace std;
 
-struct hit {
-	double x;
-	double y;
-};
-
-struct hitConf {
-	double u;
-	double v;
-};
-
-struct pqPoint_i {
-	int p;
-	int q;
-};
-
-struct pqPoint {
-	double p;
-	double q;
-};
-
-struct circlePoint {
-	double a;
-	double b;
-	double R;
-};
-
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter(double R_gen, double phi0_gen, bool parabola = false, string name = "");
+	RetinaTrackFitter(vector <hit> hitCollection_, bool parabola = false, string name = "");
 	virtual ~RetinaTrackFitter();
 
-	unsigned int setHits();
-	unsigned int cleanHits(double ymin, double ymax, double xmin, double xmax);
+	void setHitCollection(vector <hit> hitCollection_) {hitCollection = hitCollection_;};
+	void setR(double R) {R_gen_ = R;};
+	void setPhi(double phi) {phi0_gen_ = phi;};
+	void setA(double R, double phi) {a_gen_ = get_x_from_pol(R, phi);};
+	void setB(double R, double phi) {b_gen_ = get_y_from_pol(R, phi);};
+
 	void drawHits();
 	void setConfHits();
 	void drawHitsConf();
@@ -67,13 +48,8 @@ public:
 	void getCircles();
 	void drawCircles();
 
-
 private:
-
-	inline double get_x_from_pol(double r, double phi) { return r*cos(phi);};
-	inline double get_y_from_pol(double r, double phi) { return r*sin(phi);};
-	inline double get_phi_from_car(double x, double y) { return atan(y/x);};
-
+//	double pi;
 	inline double get_u(double x, double y) { return x / (x*x + y*y);};
 	inline double get_v(double x, double y) { return y / (x*x + y*y);};
 	inline double get_x(double u, double v) { return u / (u*u + v*v);};
@@ -84,22 +60,20 @@ private:
 	inline double get_p(double a, double b) { return -1. * a / b;};
 	inline double get_q(double a, double b) { return 1. / (2 * b) ;};
 
-	void setGeometry();
+//	void setGeometry();
 	void makeGrid();
 	double getResponse(double p_temp, double q_temp);
 
 	pqPoint findMaximumInterpolated(pqPoint_i point_i);
 
-	vector < double > barrel_layer_r;
+//	vector < double > barrel_layer_r;
 
   vector <vector <double> > Grid;
-  vector <hit> HitCollection;
-  vector <hitConf> HitConfCollection;
+  vector <hit> hitCollection;
+  vector <hitConf> hitConfCollection;
 
   vector <pqPoint> pqCollection;
   vector <circlePoint> circleCollection;
-
-  double pi;
 
   double R_gen_;
   double phi0_gen_;

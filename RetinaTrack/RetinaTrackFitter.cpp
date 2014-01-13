@@ -7,107 +7,35 @@
 
 #include "RetinaTrackFitter.h"
 
-RetinaTrackFitter::RetinaTrackFitter(double R_gen, double phi0_gen, bool parabola, string name) :
-	R_gen_(R_gen),
-	phi0_gen_(phi0_gen),
-	pbins(21),
-  qbins(21),
-  pmin(0.0),
-  pmax(5.0),
-  qmin(-0.02),
-  qmax(0.02),
-  sigma(0.001),
+RetinaTrackFitter::RetinaTrackFitter(vector <hit> hitCollection_, bool parabola, string name) :
+  hitCollection(hitCollection_),
+	pbins(56),
+  qbins(56),
+  pmin(-10),
+  pmax(10),
+  qmin(-0.04),
+  qmax(0.04),
+  sigma(0.00005),
   parabola_b(parabola),
   name_(name)
 {
 	hitsConf_h = new TGraph(0);
-	pi = acos(-1);
-	a_gen_ = get_x_from_pol(R_gen_, phi0_gen_);
-	b_gen_ = get_y_from_pol(R_gen_, phi0_gen_);
-	cout << "CIRCLE GENERATED: a = " << a_gen_ << "  b = " << b_gen_ << endl;
+//	cout << "CIRCLE GENERATED: a = " << a_gen_ << "  b = " << b_gen_ << endl;
 
-	setGeometry();
 	makeGrid();
 }
 
 RetinaTrackFitter::~RetinaTrackFitter() {
 }
 
-void RetinaTrackFitter::setGeometry() {
-	barrel_layer_r.push_back(23.0);
-	barrel_layer_r.push_back(35.7);
-	barrel_layer_r.push_back(50.8);
-	barrel_layer_r.push_back(68.6);
-	barrel_layer_r.push_back(88.8);
-	barrel_layer_r.push_back(108.0);
-}
 
-unsigned int RetinaTrackFitter::setHits() {
-	TRandom3 rand;
-
-	unsigned int  barrel_layer_size = barrel_layer_r.size();
-	for (unsigned int i = 0; i < barrel_layer_size; i++) {
-		double spread = 0;
-		spread = rand.Gaus(0, 0.01);
-		spread = 0;
-		double r = barrel_layer_r[i];
-		double ratio = barrel_layer_r[i] / (2*R_gen_);
-		if (ratio < -1. || ratio > 1.) continue;
-//		cout << "ratio " << ratio  << " acos = " << acos(ratio) << endl;
-//		double aratio = acos(ratio);
-		double phi = acos(ratio) + phi0_gen_;
-		while (phi > 2*pi) phi -= 2*pi;
-		while (phi < 0.) phi += 2*pi;
-		double x = get_x_from_pol(r, phi);
-		double y = get_y_from_pol(r, phi);
-		hit hit_i;
-		hit_i.x = x + spread;
-		hit_i.y = y;
-//		cout << "======== phi = " << phi;
-		if (phi < acos(-1)/2.) {
-			cout << "phi, x, y " << phi << "  " <<  x << "  " << y << endl;
-			HitCollection.push_back(hit_i); // only if first quadrant
-		}
-//		cout << "r,phi = " << r << " " << phi << "   x,y = " << x << " " << y << ":  ";
-		phi = -1*acos(ratio) + phi0_gen_;
-		while (phi > 2*pi) phi -= 2*pi;
-		while (phi < 0.) phi += 2*pi;
-//		cout << "======== phi = " << phi << endl;
-		x = get_x_from_pol(r, phi);
-		y = get_y_from_pol(r, phi);
-		hit hit_j;
-		hit_j.x = x + spread;
-		hit_j.y = y;
-		if (phi < acos(-1)/2.) {
-			cout << "phi, x, y " << phi << "  " <<  x << "  " << y << endl;
-			HitCollection.push_back(hit_j); // only if first quadrant
-		}
-//		cout << "    r,phi = " << r << " " << phi << "    ";
-//		cout << barrel_layer_r[i] << " = " << sqrt(x*x + y*y) << " ?  ";
-//		cout << sqrt(a_gen_*a_gen_ + b_gen_*b_gen_) << " = " << sqrt((x-a_gen_)*(x-a_gen_) + (y-b_gen_)*(y-b_gen_)) << " ?" << endl << endl;
-	}
-	return HitCollection.size();
-}
-
-unsigned int RetinaTrackFitter::cleanHits(double ymin, double ymax, double xmin, double xmax) {
-	vector <hit> HitCollectionNew;
-	unsigned int hits_n = HitCollection.size();
-	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
-		if (HitCollection[hit_i].y > ymin && HitCollection[hit_i].y <= ymax
-				&& HitCollection[hit_i].x > xmin && HitCollection[hit_i].x <= xmax) {
-			HitCollectionNew.push_back(HitCollection[hit_i]);
-		}
-	}
-	HitCollection = HitCollectionNew;
-	return HitCollection.size();
-}
 
 void RetinaTrackFitter::drawHits() {
-	unsigned int hits_n = HitCollection.size();
+	unsigned int hits_n = hitCollection.size();
 	TGraph hits_h(hits_n);
 	hits_h.SetTitle("Hits");
 	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
-		hits_h.SetPoint(hit_i, HitCollection[hit_i].x, HitCollection[hit_i].y);
+		hits_h.SetPoint(hit_i, hitCollection[hit_i].x, hitCollection[hit_i].y);
 	}
 	TCanvas c("c", "c", 600, 600);
 //	hits_h.GetXaxis()->SetLimits(0.,300.);
@@ -116,29 +44,30 @@ void RetinaTrackFitter::drawHits() {
 	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
 	c.Update();
-	c.Print(Form("hits_%s.pdf", name_.c_str()));
+	c.Print(Form("figs/hits_%s.pdf", name_.c_str()));
 }
 
 void RetinaTrackFitter::setConfHits() {
-	unsigned int hits_n = HitCollection.size();
+	unsigned int hits_n = hitCollection.size();
 	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
-		double x =  HitCollection[hit_i].x;
-		double y =  HitCollection[hit_i].y;
+		double x =  hitCollection[hit_i].x;
+		double y =  hitCollection[hit_i].y;
 		double u = get_u(x, y);
 		double v = get_v(x, y);
 		hitConf hitConf_i;
 		hitConf_i.u = u;
 		hitConf_i.v = v;
-		HitConfCollection.push_back(hitConf_i);
+		hitConfCollection.push_back(hitConf_i);
 	}
 }
 
 void RetinaTrackFitter::drawHitsConf() {
-	unsigned int hits_n = HitConfCollection.size();
+	unsigned int hits_n = hitConfCollection.size();
 	hitsConf_h->Set(hits_n);
-	hitsConf_h->SetTitle("Hits in conformal space");
+	double pt = 0.3 * 3.8 * R_gen_ / 100.;
+	hitsConf_h->SetTitle(Form("Hits in conformal space, p_{T} = %.f GeV", pt));
 	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
-		hitsConf_h->SetPoint(hit_i, HitConfCollection[hit_i].u, HitConfCollection[hit_i].v);
+		hitsConf_h->SetPoint(hit_i, hitConfCollection[hit_i].u, hitConfCollection[hit_i].v);
 	}
 	TCanvas c("c", "c", 600, 600);
 	gStyle->SetOptFit(1111);
@@ -148,7 +77,7 @@ void RetinaTrackFitter::drawHitsConf() {
 	hitsConf_h->Fit("pol1");
 	TF1* fun = hitsConf_h->GetFunction("pol1");
 	fun->SetParNames("q","p");
-	c.Print(Form("hitsConf_%s.pdf", name_.c_str()));
+	c.Print(Form("figs/hitsConf_%s.pdf", name_.c_str()));
 }
 
 void RetinaTrackFitter::GetFromConfToCircle() {
@@ -171,10 +100,10 @@ void RetinaTrackFitter::makeGrid() {
 void RetinaTrackFitter::fillPQGrid() {
 	for (unsigned int i = 0; i < pbins; i++) {
 		for (unsigned int j = 0; j < qbins; j++) {
-			double p_value = (pmax-pmin)/pbins * (i) + pmin;
-			double q_value = (qmax-qmin)/qbins * (j) + qmin;
+			double p_value = (pmax-pmin)/pbins * i + pmin;
+			double q_value = (qmax-qmin)/qbins * j + qmin;
 			Grid[i][j] = getResponse(p_value, q_value);
-//			cout << p_value << " " << q_value << endl;
+//			cout << i << " " << j << " p = " << p_value << " q = " << q_value << " w = " << Grid[i][j] << endl;
 		}
 	}
 }
@@ -182,15 +111,15 @@ void RetinaTrackFitter::fillPQGrid() {
 double RetinaTrackFitter::getResponse(double p_temp, double q_temp) {
 //	cout << p_temp << " " << q_temp << endl;
 	double Rij = 0.;
-	unsigned int hits_tot = HitConfCollection.size();
+	unsigned int hits_tot = hitConfCollection.size();
 	for (unsigned int kr = 0; kr < hits_tot; kr++) {
-		double u_l = (HitConfCollection[kr].v - q_temp) / p_temp;
-		double Sijkr = HitConfCollection[kr].u - u_l;
+		double u_l = (hitConfCollection[kr].v - q_temp) / p_temp;
+		double Sijkr = hitConfCollection[kr].u - u_l;
 		double term = exp(Sijkr*Sijkr/(-2.*sigma*sigma));
 //		cout << term;
 		Rij += term;
-//		cout << " v = pu + q =>" << HitConfCollection[kr].v << " = " << p_temp << " * " << u_l << " + " << q_temp << endl;
-		//cout <<  "u = " << HitConfCollection[kr].u << " u_line = " << u_line <<  endl;
+//		cout << " v = pu + q =>" << hitConfCollection[kr].v << " = " << p_temp << " * " << u_l << " + " << q_temp << endl;
+		//cout <<  "u = " << hitConfCollection[kr].u << " u_line = " << u_line <<  endl;
 	}
 	Rij /= hits_tot;
 	if (Rij < 1e-6) return 1e-6;
@@ -209,8 +138,8 @@ void RetinaTrackFitter::drawPQGrid() {
 	gStyle->SetPaintTextFormat("5.2f");
 	TCanvas c("c", "c", 600, 600);
 	pq_h.SetStats(false);
-	pq_h.Draw("COLZtext");
-	c.Print(Form("PQgrid_%s.pdf", name_.c_str()));
+	pq_h.Draw("COLZTEXT");
+	c.Print(Form("figs/PQgrid_%s.pdf", name_.c_str()));
 }
 
 void RetinaTrackFitter::findMaxima() {
@@ -272,11 +201,12 @@ void RetinaTrackFitter::printMaxima() {
 }
 
 void RetinaTrackFitter::drawHitsConfRetina() {
-	unsigned int hits_n = HitConfCollection.size();
+	unsigned int hits_n = hitConfCollection.size();
 	TGraph hitsConf_g(hits_n);
-	hitsConf_g.SetTitle("Hits in conformal space and retina lines");
+	double pt = 0.3 * 3.8 * R_gen_ / 100.;
+	hitsConf_g.SetTitle(Form("Hits in conformal space and retina lines, p_{T} = %.f GeV", pt));
 	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
-		hitsConf_g.SetPoint(hit_i, HitConfCollection[hit_i].u, HitConfCollection[hit_i].v);
+		hitsConf_g.SetPoint(hit_i, hitConfCollection[hit_i].u, hitConfCollection[hit_i].v);
 	}
 	TCanvas cc("cc", "cc", 600, 600);
 //		gStyle->SetOptFit(1111);
@@ -294,12 +224,12 @@ void RetinaTrackFitter::drawHitsConfRetina() {
 	for (unsigned int line_i = 0; line_i < lines_size; line_i++) {
 		double p_i = pqCollection[line_i].p;
 		double q_i = pqCollection[line_i].q;
-		lines[line_i] = new TF1(Form("line_%d", line_i), "pol1", 0., 5.);
+		lines[line_i] = new TF1(Form("line_%d", line_i), "pol1", -5., 5.);
 		lines[line_i]->SetParameters(q_i, p_i);
 		lines[line_i]->SetLineColor(kBlue + line_i);
 		lines[line_i]->Draw("same");
 	}
-	cc.Print(Form("hitsConfRetina_%s.pdf", name_.c_str()));
+	cc.Print(Form("figs/hitsConfRetina_%s.pdf", name_.c_str()));
 }
 
 void RetinaTrackFitter::getCircles() {
@@ -315,11 +245,12 @@ void RetinaTrackFitter::getCircles() {
 
 void RetinaTrackFitter::drawCircles() {
 
-	unsigned int hits_n = HitCollection.size();
+	unsigned int hits_n = hitCollection.size();
 	TGraph hits_h(hits_n);
-	hits_h.SetTitle("Hits and retina circles");
+	double pt = 0.3 * 3.8 * R_gen_ / 100.;
+	hits_h.SetTitle(Form("Hits and retina circles, p_{T} = %.f GeV", pt));
 	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
-		hits_h.SetPoint(hit_i, HitCollection[hit_i].x, HitCollection[hit_i].y);
+		hits_h.SetPoint(hit_i, hitCollection[hit_i].x, hitCollection[hit_i].y);
 	}
 	TCanvas c("c", "c", 600, 600);
 //	hits_h.GetXaxis()->SetLimits(0.,5.);
@@ -329,26 +260,26 @@ void RetinaTrackFitter::drawCircles() {
 	hits_h.Draw("A*");
 
 	string circle_leg;
-	if (a_gen_ < 0.) circle_leg = "[1] - sqrt([1]*[1] + 2*[0]*x - x*x)";
-	else circle_leg = "[1] + sqrt([1]*[1] + 2*[0]*x - x*x)";
-	TF1 * circle_origin = new TF1( "circle_origin", circle_leg.c_str(), 0., 300.);
-	circle_origin->SetParameters(a_gen_, b_gen_);
-	circle_origin->SetLineStyle(2);
-	circle_origin->Draw("same");
+	TEllipse circle_origin(a_gen_, b_gen_, R_gen_);
+	circle_origin.SetNoEdges();
+	circle_origin.SetLineColor(kRed);
+	circle_origin.SetLineStyle(2);
+	circle_origin.SetFillStyle(0);
+	circle_origin.Draw("same");
 
 	unsigned int circles_size = circleCollection.size();
-	vector <TF1 *> circle_f;
+	vector <TEllipse*> circle_f;
 	circle_f.resize(circles_size);
 	for (unsigned int circle_i = 0; circle_i < circles_size; circle_i++) {
 		double a = circleCollection[circle_i].a;
 		double b = circleCollection[circle_i].b;
-		if (a < 0.) circle_leg = "[1] - sqrt([1]*[1] + 2*[0]*x - x*x)";
-		else circle_leg = "[1] + sqrt([1]*[1] + 2*[0]*x - x*x)";
-		circle_f[circle_i] = new TF1( Form("circle_%i", circle_i), circle_leg.c_str(), 0., 300.);
-		circle_f[circle_i]->SetParameters(a, b);
+		double R = sqrt(a*a + b*b);
+		circle_f[circle_i] = new TEllipse(a, b, R);
+		circle_f[circle_i]->SetNoEdges();
 		circle_f[circle_i]->SetLineColor(kBlue + circle_i);
+		circle_f[circle_i]->SetFillStyle(0);
 		circle_f[circle_i]->Draw("same");
 	}
 
-	c.Print(Form("hitsRetina_%s.pdf", name_.c_str()));
+	c.Print(Form("figs/hitsRetina_%s.pdf", name_.c_str()));
 }
