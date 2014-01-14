@@ -9,13 +9,13 @@
 
 RetinaTrackFitter::RetinaTrackFitter(vector <hit> hitCollection_, bool parabola, string name) :
   hitCollection(hitCollection_),
-	pbins(56),
-  qbins(56),
-  pmin(-10),
-  pmax(10),
-  qmin(-0.04),
-  qmax(0.04),
-  sigma(0.00005),
+	pbins(52),
+  qbins(52),
+  pmin(0.5),
+  pmax(10.),
+  qmin(0.00000),
+  qmax(0.03000),
+  sigma(0.0001),
   parabola_b(parabola),
   name_(name)
 {
@@ -38,8 +38,8 @@ void RetinaTrackFitter::drawHits() {
 		hits_h.SetPoint(hit_i, hitCollection[hit_i].x, hitCollection[hit_i].y);
 	}
 	TCanvas c("c", "c", 600, 600);
-//	hits_h.GetXaxis()->SetLimits(0.,300.);
-//	hits_h.GetYaxis()->SetRangeUser(0.,300.);
+	hits_h.GetXaxis()->SetLimits(0., hits_h.GetXaxis()->GetXmax());
+	hits_h.GetYaxis()->SetRangeUser(0., hits_h.GetYaxis()->GetXmax());
 	hits_h.GetXaxis()->SetTitle("x[cm]");
 	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
@@ -138,7 +138,9 @@ void RetinaTrackFitter::drawPQGrid() {
 	gStyle->SetPaintTextFormat("5.2f");
 	TCanvas c("c", "c", 600, 600);
 	pq_h.SetStats(false);
-	pq_h.Draw("COLZTEXT");
+	string draw_s("COLZTEXT");
+	if (qbins > 30 || pbins > 30) draw_s = "COLZ";
+	pq_h.Draw(draw_s.c_str());
 	c.Print(Form("figs/PQgrid_%s.pdf", name_.c_str()));
 }
 
@@ -160,20 +162,20 @@ void RetinaTrackFitter::findMaxima() {
 				point_i.p = i;
 				point_i.q = j;
 //				cout << "not interpolated " << Grid[i][j] << endl;
-				pqPoint point_interpolated = findMaximumInterpolated(point_i);
+				pqPoint point_interpolated = findMaximumInterpolated(point_i, Grid[i][j]);
 				pqCollection.push_back(point_interpolated);
 			}
 		}
 	}
 }
 
-pqPoint RetinaTrackFitter::findMaximumInterpolated(pqPoint_i point_i) {
+pqPoint RetinaTrackFitter::findMaximumInterpolated(pqPoint_i point_i, double w) {
 	int p_i = point_i.p;
 	int q_i = point_i.q;
 
 	double p_mean = 0.;
 	double q_mean = 0.;
-	cout << "p = " << (pmax-pmin)/pbins * (p_i) + pmin << "   q = " <<  (qmax-qmin)/qbins * (q_i) + qmin << endl;
+	cout << "p = " << (pmax-pmin)/pbins * (p_i) + pmin << "   q = " <<  (qmax-qmin)/qbins * (q_i) + qmin << "  w = " << w << endl;
 	p_mean =  ((pmax-pmin)/pbins * (p_i-1) + pmin) * Grid[p_i-1][q_i] +
 						((pmax-pmin)/pbins * (p_i) + pmin) * Grid[p_i][q_i] +
 						((pmax-pmin)/pbins * (p_i+1) + pmin) * Grid[p_i+1][q_i];
@@ -188,6 +190,7 @@ pqPoint RetinaTrackFitter::findMaximumInterpolated(pqPoint_i point_i) {
 	pqPoint point_o;
 	point_o.p = p_mean;
 	point_o.q = q_mean;
+	point_o.w = w;
 //	cout << "interpolated " << Grid[p_mean][j] << endl;
 	return point_o;
 }
@@ -253,8 +256,8 @@ void RetinaTrackFitter::drawCircles() {
 		hits_h.SetPoint(hit_i, hitCollection[hit_i].x, hitCollection[hit_i].y);
 	}
 	TCanvas c("c", "c", 600, 600);
-//	hits_h.GetXaxis()->SetLimits(0.,5.);
-//	hits_h.GetYaxis()->SetRangeUser(0.,5.);
+	hits_h.GetXaxis()->SetLimits(0., hits_h.GetXaxis()->GetXmax());
+	hits_h.GetYaxis()->SetRangeUser(0., hits_h.GetYaxis()->GetXmax());
 	hits_h.GetXaxis()->SetTitle("x[cm]");
 	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
@@ -282,4 +285,23 @@ void RetinaTrackFitter::drawCircles() {
 	}
 
 	c.Print(Form("figs/hitsRetina_%s.pdf", name_.c_str()));
+}
+
+track RetinaTrackFitter::getTrackParameters() {
+	unsigned int size = pqCollection.size();
+	double max = 0.1;
+	track track;
+	for (unsigned int i = 0; i < size; i++) {
+		if (pqCollection[i].w > max) {
+			max = pqCollection[i].w;
+			double a = get_a(pqCollection[i].p, pqCollection[i].q);
+			double b = get_b(pqCollection[i].p, pqCollection[i].q);
+			track.phi = get_phi_from_car(a, b);
+			track.pt = get_r_from_car(a, b) / 100. * 0.3 * 3.8;
+			cout << "a = "<< a << " b = " << b << " p = " << pqCollection[i].p << " r = " << get_r_from_car(a, b) << " ";
+		}
+	}
+	if (max == 0.1) track.pt = -1.;
+	cout << "pt = " << track.pt << " phi = " << track.phi << endl;
+	return track;
 }

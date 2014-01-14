@@ -9,6 +9,7 @@
 #define COMMONFUNCS_H_
 
 #include <math.h>
+#include <iostream>
 
 struct hit {
 	double x;
@@ -28,6 +29,7 @@ struct pqPoint_i {
 struct pqPoint {
 	double p;
 	double q;
+	double w;
 };
 
 struct circlePoint {
@@ -36,11 +38,17 @@ struct circlePoint {
 	double R;
 };
 
+struct track {
+	double pt;
+	double phi;
+};
+
 inline double get_x_from_pol(double r, double phi) { return r*cos(phi);};
 inline double get_y_from_pol(double r, double phi) { return r*sin(phi);};
-inline double get_phi_from_car(double x, double y) { return atan(y/x);};
 inline double get_r_from_car(double x, double y) { return sqrt(x*x + y*y);};
+inline double get_phi_from_car(double x, double y) { return acos(x / get_r_from_car(x, y));}; // { return atan(y/x);};
 
 extern double pi;
+inline void print_hit(hit hit) { std::cout << "x = " << hit.x << "; y = " << hit.x << std::endl;}
 
 #endif /* COMMONFUNCS_H_ */

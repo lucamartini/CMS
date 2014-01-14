@@ -19,30 +19,29 @@ int main(int argc, char* argv[]) {
 	// sqrt(a^2 + b^2) = R = pt / (0.3 * B) = 1.8 m = 180 cm
 	// pt = 2 GeV --> R = 1.8 m = 180 cm
 	// pt = 3 GeV --> R = 2.6 m = 260 cm
+	// pt = 4 GeV --> R = 3.5 m = 350 cm
 	// pt = 20 GeV --> R = 17.5 m = 1750 cm
 	// pt = 100 GeV --> R = 87.7 m = 8770 cm
 	// r = 2R cos (phi - phi0) origin lies on circle
 
+	TH1D pt_res("pt_res", "p_{T} resolution;[GeV]", 100, -10., 10.);
+	TH1D phi_res("phi_res", "#phi resolution;[rad]", 100, -.2, .2);
+
   vector <double> phi0;
-//  for (int i = 1; i < 5; i++) {
-//  	double phi_i = pi/10. * i + pi/2. + 0.05;
-//  	phi0.push_back(phi_i);
-//  }
-//  for (int i = 1; i < 5; i++) {
-//  	double phi_i = pi/10. * i + 3*pi/2. + 0.05;
-//  	phi0.push_back(phi_i);
-//  }
-  double phi_i = 0 + pi/24.;
-  while (phi_i < 2*pi) {
+  // let's take second phi sector: [pi/4, pi/2]
+  double phi_i = 3*pi/4.;
+  // phi_i += pi/24;
+  while (phi_i < pi) {
   	phi0.push_back(phi_i);
-  	phi_i += pi/6.;
+  	phi_i += pi/48.;
   }
 
   vector <double> R;
   R.push_back(180.);
   R.push_back(260.);
-  R.push_back(1750.);
-  R.push_back(8770.);
+  R.push_back(350.);
+//  R.push_back(1750.);
+//  R.push_back(8770.);
 
 	int size_phi = phi0.size();
 	int size_R = R.size();
@@ -50,9 +49,11 @@ int main(int argc, char* argv[]) {
 	for (int i = 0; i < size_phi; i++) {
 		for (int j = 0; j < size_R; j++) {
 //			if (i != 1 || j != 0) continue;
-			cout << "r_gen, phi_gen = " << R[j] << ", " << phi0[i] << endl;
+			cout << endl << "r_gen, phi_gen = " << R[j] << ", " << phi0[i] << endl;
 			HitsGenerator HG;
-			HG.addCircle(R[j], phi0[i], true);
+			HG.addCircle(R[j], phi0[i], false);
+//			HG.addCircle(R[j], phi0[i+1], false);
+			HG.cleanHitsRPhi(0., 100000., pi/4., pi/2.);
 			vector <hit> hitscollection = HG.getHitCollection();
 			unsigned int hits = hitscollection.size();
 			cout << "hits = " << hits << endl;
@@ -79,8 +80,25 @@ int main(int argc, char* argv[]) {
 
 			rtf.getCircles();
 			rtf.drawCircles();
+
+			track track_ij = rtf.getTrackParameters();
+			double pt_reco = track_ij.pt;
+			if (pt_reco < 0.) continue;
+			double phi_reco = track_ij.phi;
+
+			pt_res.Fill(pt_reco - R[j]/100.*0.3*3.8);
+			phi_res.Fill(phi_reco - phi0[i]);
 		}
 	}
+
+	TCanvas pt_c("pt_c", "pt_c", 600, 600);
+	pt_res.Draw();
+	pt_c.Print("figs/pt_res.pdf");
+
+	TCanvas phi_c("phi_c", "phi_c", 600, 600);
+	phi_res.Draw();
+	phi_c.Print("figs/phi_res.pdf");
+
 	return EXIT_SUCCESS;
 }
 

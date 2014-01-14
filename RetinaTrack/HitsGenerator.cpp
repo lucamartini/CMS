@@ -54,7 +54,7 @@ void HitsGenerator::addCircle(double R_gen, double phi0_gen, bool random_leg) {
 		double y;
 		if (first) {
 			phi = acos(ratio) + phi0_gen;
-			while (phi > 2*pi) phi -= 2*pi;
+			while (phi >= 2*pi) phi -= 2*pi;
 			while (phi < 0.) phi += 2*pi;
 			x = get_x_from_pol(r, phi);
 			y = get_y_from_pol(r, phi);
@@ -62,11 +62,12 @@ void HitsGenerator::addCircle(double R_gen, double phi0_gen, bool random_leg) {
 			hit_i.x = x + spread;
 			hit_i.y = y;
 			hitCollection.push_back(hit_i);
+//			print_hit(hit_i);
 		}
 
 		if (second) {
 			phi = -1*acos(ratio) + phi0_gen;
-			while (phi > 2*pi) phi -= 2*pi;
+			while (phi >= 2*pi) phi -= 2*pi;
 			while (phi < 0.) phi += 2*pi;
 			x = get_x_from_pol(r, phi);
 			y = get_y_from_pol(r, phi);
@@ -74,17 +75,37 @@ void HitsGenerator::addCircle(double R_gen, double phi0_gen, bool random_leg) {
 			hit_j.x = x + spread;
 			hit_j.y = y;
 			hitCollection.push_back(hit_j);
+//			print_hit(hit_j);
 		}
 	}
 //	return HitCollection.size();
 }
 
-unsigned int HitsGenerator::cleanHits(double ymin, double ymax, double xmin, double xmax) {
+unsigned int HitsGenerator::cleanHitsXY(double ymin, double ymax, double xmin, double xmax) {
 	vector <hit> HitCollectionNew;
 	unsigned int hits_n = hitCollection.size();
 	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
 		if (hitCollection[hit_i].y > ymin && hitCollection[hit_i].y <= ymax
 				&& hitCollection[hit_i].x > xmin && hitCollection[hit_i].x <= xmax) {
+			HitCollectionNew.push_back(hitCollection[hit_i]);
+		}
+	}
+	hitCollection = HitCollectionNew;
+	return hitCollection.size();
+}
+
+unsigned int HitsGenerator::cleanHitsRPhi(double rmin, double rmax, double phimin, double phimax) {
+	vector <hit> HitCollectionNew;
+	unsigned int hits_n = hitCollection.size();
+	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
+		double x = hitCollection[hit_i].x;
+		double y = hitCollection[hit_i].y;
+		double r = get_r_from_car(x, y);
+//		double phi = get_phi_from_car(x, y);
+		double phi = acos(x/r);
+//		cout << x << " " << y << " " << r << " " << phi << endl;
+		if (r >= rmin && r <= rmax
+				&& phi >= phimin && phi <= phimax) {
 			HitCollectionNew.push_back(hitCollection[hit_i]);
 		}
 	}

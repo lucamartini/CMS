@@ -23,8 +23,8 @@ public:
 	HitsGenerator();
 	virtual ~HitsGenerator();
 
-//	unsigned int setHits();
-	unsigned int cleanHits(double ymin, double ymax, double xmin, double xmax);
+	unsigned int cleanHitsXY(double ymin, double ymax, double xmin, double xmax);
+	unsigned int cleanHitsRPhi(double rmin, double rmax, double phimin, double phimax);
 
 	void addHit(double x, double y);
 	void addCircle(double R_gen, double phi0_gen, bool random_leg = false);

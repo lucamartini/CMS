@@ -48,6 +48,8 @@ public:
 	void getCircles();
 	void drawCircles();
 
+	track getTrackParameters();
+
 private:
 //	double pi;
 	inline double get_u(double x, double y) { return x / (x*x + y*y);};
@@ -64,7 +66,7 @@ private:
 	void makeGrid();
 	double getResponse(double p_temp, double q_temp);
 
-	pqPoint findMaximumInterpolated(pqPoint_i point_i);
+	pqPoint findMaximumInterpolated(pqPoint_i point_i, double w);
 
 //	vector < double > barrel_layer_r;
 
