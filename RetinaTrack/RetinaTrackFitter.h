@@ -27,7 +27,7 @@ using namespace std;
 
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter(vector <hit> hitCollection_, bool parabola = false, string name = "");
+	RetinaTrackFitter(vector <hit> hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, bool parabola = false, string name = "");
 	virtual ~RetinaTrackFitter();
 
 	void setHitCollection(vector <hit> hitCollection_) {hitCollection = hitCollection_;};
@@ -38,8 +38,7 @@ public:
 
 	void drawHits();
 	void setConfHits();
-	void drawHitsConf();
-	void GetFromConfToCircle();
+	pqPoint drawHitsConf();
 	void fillPQGrid();
 	void drawPQGrid();
 	void findMaxima();
@@ -48,10 +47,10 @@ public:
 	void getCircles();
 	void drawCircles();
 
-	track getTrackParameters();
+	track getBestTrack();
+	pqPoint getBestPQ();
 
 private:
-//	double pi;
 	inline double get_u(double x, double y) { return x / (x*x + y*y);};
 	inline double get_v(double x, double y) { return y / (x*x + y*y);};
 	inline double get_x(double u, double v) { return u / (u*u + v*v);};
@@ -62,13 +61,10 @@ private:
 	inline double get_p(double a, double b) { return -1. * a / b;};
 	inline double get_q(double a, double b) { return 1. / (2 * b) ;};
 
-//	void setGeometry();
 	void makeGrid();
 	double getResponse(double p_temp, double q_temp);
 
 	pqPoint findMaximumInterpolated(pqPoint_i point_i, double w);
-
-//	vector < double > barrel_layer_r;
 
   vector <vector <double> > Grid;
   vector <hit> hitCollection;
@@ -89,10 +85,6 @@ private:
   double qmax;
   double sigma;
 
-  double a_L1f;
-  double b_L1f;
-  double p;
-  double q;
   TGraph * hitsConf_h;
 
   bool parabola_b;

@@ -10,6 +10,20 @@
 #include "HitsGenerator.h"
 #include "RetinaTrackFitter.h"
 
+void DrawCanvas(TH1D h) {
+	TCanvas c("c", "c", 600, 600);
+	h.Draw();
+	c.Print(Form("figs/%s.pdf", h.GetName()));
+}
+
+void DrawCanvas2(TH2D h) {
+	gStyle->SetPalette(54);
+	TCanvas c("c", "c", 600, 600);
+	h.SetStats(false);
+	h.Draw("COLZ");
+	c.Print(Form("figs/%s.pdf", h.GetName()));
+}
+
 int main(int argc, char* argv[]) {
 //	double pi;
 //	pi = acos(-1);
@@ -24,8 +38,21 @@ int main(int argc, char* argv[]) {
 	// pt = 100 GeV --> R = 87.7 m = 8770 cm
 	// r = 2R cos (phi - phi0) origin lies on circle
 
+	unsigned int pbins(32);
+	unsigned int qbins(12);
+  double pmin(0.5);
+  double pmax(10.);
+  double qmin(0.);
+  double qmax(0.03);
+	double qstep = (qmax-qmin)/(double)qbins;
+	double pstep = (pmax-pmin)/(double)pbins;
+	cout << "qstep = " << qstep << " /cm; pstep = " << pstep << endl;
 	TH1D pt_res("pt_res", "p_{T} resolution;[GeV]", 100, -10., 10.);
 	TH1D phi_res("phi_res", "#phi resolution;[rad]", 100, -.2, .2);
+	TH1D p_res("p_res", "p resolution / p step;[p]", 100, -1, 1);
+	TH1D q_res("q_res", "q resolution / q step[q]", 100, -1, 1);
+	TH2D pt_phi_res("pt_phi_res", "pt_phi_res;p_{T}[GeV];#phi", 20, -10., 10., 20, -2., 2.);
+	TH2D p_q_res("p_q_res", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
 
   vector <double> phi0;
   // let's take second phi sector: [pi/4, pi/2]
@@ -59,7 +86,7 @@ int main(int argc, char* argv[]) {
 			cout << "hits = " << hits << endl;
 			if (hits == 0) continue;
 
-			RetinaTrackFitter rtf(hitscollection, false, Form("%d_%d", i, j));
+			RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, false, Form("%d_%d", i, j));
 			rtf.setR(R[j]);
 			rtf.setPhi(phi0[i]);
 			rtf.setA(R[j], phi0[i]);
@@ -68,8 +95,7 @@ int main(int argc, char* argv[]) {
 			rtf.drawHits();
 
 			rtf.setConfHits();
-			rtf.drawHitsConf();
-			rtf.GetFromConfToCircle();
+			pqPoint pqtrue = rtf.drawHitsConf();
 
 			rtf.fillPQGrid();
 			rtf.drawPQGrid();
@@ -81,23 +107,32 @@ int main(int argc, char* argv[]) {
 			rtf.getCircles();
 			rtf.drawCircles();
 
-			track track_ij = rtf.getTrackParameters();
+			track track_ij = rtf.getBestTrack();
 			double pt_reco = track_ij.pt;
 			if (pt_reco < 0.) continue;
 			double phi_reco = track_ij.phi;
 
-			pt_res.Fill(pt_reco - R[j]/100.*0.3*3.8);
-			phi_res.Fill(phi_reco - phi0[i]);
+			double pt_res_d = pt_reco - R[j]/100.*0.3*3.8;
+			double phi_res_d = phi_reco - phi0[i];
+			pt_res.Fill(pt_res_d);
+			phi_res.Fill(phi_res_d);
+			pt_phi_res.Fill(pt_res_d, phi_res_d);
+			pqPoint bestpq = rtf.getBestPQ();
+			double p_res_d = (bestpq.p - pqtrue.p)/pstep;
+			double q_res_d = (bestpq.q - pqtrue.q)/qstep;
+			p_res.Fill(p_res_d);
+			q_res.Fill(q_res_d);
+			p_q_res.Fill(p_res_d, q_res_d);
+
 		}
 	}
 
-	TCanvas pt_c("pt_c", "pt_c", 600, 600);
-	pt_res.Draw();
-	pt_c.Print("figs/pt_res.pdf");
-
-	TCanvas phi_c("phi_c", "phi_c", 600, 600);
-	phi_res.Draw();
-	phi_c.Print("figs/phi_res.pdf");
+	DrawCanvas(pt_res);
+	DrawCanvas(phi_res);
+	DrawCanvas2(pt_phi_res);
+	DrawCanvas(p_res);
+	DrawCanvas(q_res);
+	DrawCanvas2(p_q_res);
 
 	return EXIT_SUCCESS;
 }

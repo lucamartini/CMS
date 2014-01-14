@@ -7,28 +7,25 @@
 
 #include "RetinaTrackFitter.h"
 
-RetinaTrackFitter::RetinaTrackFitter(vector <hit> hitCollection_, bool parabola, string name) :
+RetinaTrackFitter::RetinaTrackFitter(vector <hit> hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, bool parabola, string name) :
   hitCollection(hitCollection_),
-	pbins(52),
-  qbins(52),
-  pmin(0.5),
-  pmax(10.),
-  qmin(0.00000),
-  qmax(0.03000),
-  sigma(0.0001),
+	pbins(pbins_),
+  qbins(qbins_),
+  pmin(pmin_),
+  pmax(pmax_),
+  qmin(qmin_),
+  qmax(qmax_),
+  sigma(0.001),
   parabola_b(parabola),
   name_(name)
 {
 	hitsConf_h = new TGraph(0);
 //	cout << "CIRCLE GENERATED: a = " << a_gen_ << "  b = " << b_gen_ << endl;
-
 	makeGrid();
 }
 
 RetinaTrackFitter::~RetinaTrackFitter() {
 }
-
-
 
 void RetinaTrackFitter::drawHits() {
 	unsigned int hits_n = hitCollection.size();
@@ -61,7 +58,7 @@ void RetinaTrackFitter::setConfHits() {
 	}
 }
 
-void RetinaTrackFitter::drawHitsConf() {
+pqPoint RetinaTrackFitter::drawHitsConf() {
 	unsigned int hits_n = hitConfCollection.size();
 	hitsConf_h->Set(hits_n);
 	double pt = 0.3 * 3.8 * R_gen_ / 100.;
@@ -78,16 +75,10 @@ void RetinaTrackFitter::drawHitsConf() {
 	TF1* fun = hitsConf_h->GetFunction("pol1");
 	fun->SetParNames("q","p");
 	c.Print(Form("figs/hitsConf_%s.pdf", name_.c_str()));
-}
-
-void RetinaTrackFitter::GetFromConfToCircle() {
-	TF1* fun = hitsConf_h->GetFunction("pol1");
-	q = fun->GetParameter(0);
-	p = fun->GetParameter(1);
-	a_L1f = get_a(p, q);
-	b_L1f = get_b(p, q);
-//	cout << "a = " << a_L1f << "  b = " << b_L1f << endl;
-//	cout << "p = " << get_p(a_L1f, b_L1f) << "  q = " << get_q(a_L1f, b_L1f) << endl;
+	pqPoint truepq;
+	truepq.p = fun->GetParameter("p");
+	truepq.q = fun->GetParameter("q");
+	return truepq;
 }
 
 void RetinaTrackFitter::makeGrid() {
@@ -157,7 +148,7 @@ void RetinaTrackFitter::findMaxima() {
 	        && Grid[i][j] > Grid[i-1][j-1]
 	        && Grid[i][j] > Grid[i-1][j+1]
 	 ) {
-				if (Grid[i][j] < 0.25) continue; // cleaning
+//				if (Grid[i][j] < 0.25) continue; // cleaning
 				pqPoint_i point_i;
 				point_i.p = i;
 				point_i.q = j;
@@ -176,10 +167,10 @@ pqPoint RetinaTrackFitter::findMaximumInterpolated(pqPoint_i point_i, double w) 
 	double p_mean = 0.;
 	double q_mean = 0.;
 	cout << "p = " << (pmax-pmin)/pbins * (p_i) + pmin << "   q = " <<  (qmax-qmin)/qbins * (q_i) + qmin << "  w = " << w << endl;
-	p_mean =  ((pmax-pmin)/pbins * (p_i-1) + pmin) * Grid[p_i-1][q_i] +
-						((pmax-pmin)/pbins * (p_i) + pmin) * Grid[p_i][q_i] +
-						((pmax-pmin)/pbins * (p_i+1) + pmin) * Grid[p_i+1][q_i];
-	p_mean /= Grid[p_i-1][q_i] + Grid[p_i][q_i] + Grid[p_i+1][q_i];
+	p_mean =  ((pmax-pmin)/pbins * (p_i-1) + pmin) * pow(Grid[p_i-1][q_i],2) +
+						((pmax-pmin)/pbins * (p_i) + pmin) * pow(Grid[p_i][q_i],2) +
+						((pmax-pmin)/pbins * (p_i+1) + pmin) * pow(Grid[p_i+1][q_i],2);
+	p_mean /= pow(Grid[p_i-1][q_i],2) + pow(Grid[p_i][q_i],2) + pow(Grid[p_i+1][q_i],2);
 
 
 	q_mean =  ((qmax-qmin)/qbins * (q_i-1) + qmin) * Grid[p_i][q_i-1] +
@@ -287,7 +278,7 @@ void RetinaTrackFitter::drawCircles() {
 	c.Print(Form("figs/hitsRetina_%s.pdf", name_.c_str()));
 }
 
-track RetinaTrackFitter::getTrackParameters() {
+track RetinaTrackFitter::getBestTrack() {
 	unsigned int size = pqCollection.size();
 	double max = 0.1;
 	track track;
@@ -304,4 +295,17 @@ track RetinaTrackFitter::getTrackParameters() {
 	if (max == 0.1) track.pt = -1.;
 	cout << "pt = " << track.pt << " phi = " << track.phi << endl;
 	return track;
+}
+
+pqPoint RetinaTrackFitter::getBestPQ() {
+	unsigned int size = pqCollection.size();
+	double max = 0.1;
+	pqPoint bestPQ;
+	for (unsigned int i = 0; i < size; i++) {
+		if (pqCollection[i].w > max) {
+			max = pqCollection[i].w;
+			bestPQ = pqCollection[i];
+		}
+	}
+	return bestPQ;
 }
