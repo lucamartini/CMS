@@ -23,38 +23,33 @@
 
 #include "CommonFuncs.h"
 
+#include "HitsGenerator.h"
+
 using namespace std;
 
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter(vector <hit> hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, bool parabola = false, string name = "");
+	RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, bool parabola = false, string name = "");
 	virtual ~RetinaTrackFitter();
 
-	void setHitCollection(vector <hit> hitCollection_) {hitCollection = hitCollection_;};
+	void setHitCollection(HitCollection hitCollection_) {hitCollection = hitCollection_;};
 	void setR(double R) {R_gen_ = R;};
 	void setPhi(double phi) {phi0_gen_ = phi;};
 	void setA(double R, double phi) {a_gen_ = get_x_from_pol(R, phi);};
 	void setB(double R, double phi) {b_gen_ = get_y_from_pol(R, phi);};
 
-	void drawHits();
-	void setConfHits();
-	pqPoint drawHitsConf();
 	void fillPQGrid();
 	void drawPQGrid();
 	void findMaxima();
 	void printMaxima();
-	void drawHitsConfRetina();
 	void getCircles();
 	void drawCircles();
+	void drawTracks();
 
 	track getBestTrack();
 	pqPoint getBestPQ();
 
 private:
-	inline double get_u(double x, double y) { return x / (x*x + y*y);};
-	inline double get_v(double x, double y) { return y / (x*x + y*y);};
-	inline double get_x(double u, double v) { return u / (u*u + v*v);};
-	inline double get_y(double u, double v) { return v / (u*u + v*v);};
 
 	inline double get_a(double p, double q) { return -1. * p / ( 2 * q);};
 	inline double get_b(double p, double q) { return 1. / (2 * q);};
@@ -67,8 +62,7 @@ private:
 	pqPoint findMaximumInterpolated(pqPoint_i point_i, double w);
 
   vector <vector <double> > Grid;
-  vector <hit> hitCollection;
-  vector <hitConf> hitConfCollection;
+  HitCollection hitCollection;
 
   vector <pqPoint> pqCollection;
   vector <circlePoint> circleCollection;
@@ -84,8 +78,6 @@ private:
   double qmin;
   double qmax;
   double sigma;
-
-  TGraph * hitsConf_h;
 
   bool parabola_b;
 

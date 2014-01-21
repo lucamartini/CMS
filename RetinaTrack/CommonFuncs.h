@@ -11,11 +11,6 @@
 #include <math.h>
 #include <iostream>
 
-struct hit {
-	double x;
-	double y;
-};
-
 struct hitConf {
 	double u;
 	double v;
@@ -49,6 +44,5 @@ inline double get_r_from_car(double x, double y) { return sqrt(x*x + y*y);};
 inline double get_phi_from_car(double x, double y) { return acos(x / get_r_from_car(x, y));}; // { return atan(y/x);};
 
 extern double pi;
-inline void print_hit(hit hit) { std::cout << "x = " << hit.x << "; y = " << hit.x << std::endl;}
 
 #endif /* COMMONFUNCS_H_ */

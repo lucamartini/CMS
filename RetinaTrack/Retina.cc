@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 	TH1D pt_res("pt_res", "p_{T} resolution;[GeV]", 100, -10., 10.);
 	TH1D phi_res("phi_res", "#phi resolution;[rad]", 100, -.2, .2);
 	TH1D p_res("p_res", "p resolution / p step;[p]", 100, -1, 1);
-	TH1D q_res("q_res", "q resolution / q step[q]", 100, -1, 1);
+	TH1D q_res("q_res", "q resolution / q step;[q]", 100, -1, 1);
 	TH2D pt_phi_res("pt_phi_res", "pt_phi_res;p_{T}[GeV];#phi", 20, -10., 10., 20, -2., 2.);
 	TH2D p_q_res("p_q_res", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
 
@@ -73,11 +73,13 @@ int main(int argc, char* argv[]) {
 	int size_phi = phi0.size();
 	int size_R = R.size();
 
+	LayerGeometry LG;
+
 	for (int i = 0; i < size_phi; i++) {
 		for (int j = 0; j < size_R; j++) {
 //			if (i != 1 || j != 0) continue;
 			cout << endl << "r_gen, phi_gen = " << R[j] << ", " << phi0[i] << endl;
-			HitsGenerator HG;
+			HitsGenerator HG(LG, cylinder);
 			HG.addCircle(R[j], phi0[i], false);
 //			HG.addCircle(R[j], phi0[i+1], false);
 			HG.cleanHitsRPhi(0., 100000., pi/4., pi/2.);

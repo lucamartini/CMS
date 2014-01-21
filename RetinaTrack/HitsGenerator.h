@@ -8,33 +8,46 @@
 #ifndef HITSGENERATOR_H_
 #define HITSGENERATOR_H_
 
-#include <vector>
+
 #include <iostream>
 
 #include "TRandom3.h"
 
 #include "CommonFuncs.h"
 
+#include "LayerGeometry.h"
+#include "HitCollection.h"
 
-using namespace std;
+//using namespace std;
+
+enum geometry {plain, cylinder};
+
+
 
 class HitsGenerator {
 public:
-	HitsGenerator();
+	HitsGenerator(LayerGeometry LG_, geometry geo_, string name_);
 	virtual ~HitsGenerator();
 
 	unsigned int cleanHitsXY(double ymin, double ymax, double xmin, double xmax);
 	unsigned int cleanHitsRPhi(double rmin, double rmax, double phimin, double phimax);
 
 	void addHit(double x, double y);
+	void addHit(double x);
 	void addCircle(double R_gen, double phi0_gen, bool random_leg = false);
+	void addLine(double phi0_gen, double b = 0.);
 
-	vector <hit> getHitCollection() {return hitCollection;};
+	inline void print_hit(hit hit) { std::cout << "x = " << hit.x << "; y = " << hit.x << std::endl;}
+
+	HitCollection getHitCollection() {return hitCollection;};
 
 private:
-	void setGeometry();
-	vector < double > barrel_layer_r;
-  vector <hit> hitCollection;
+
+	HitCollection hitCollection;
+  LayerGeometry LG;
+  geometry geo;
+  string name;
+
 };
 
 #endif /* HITSGENERATOR_H_ */

@@ -30,13 +30,31 @@ CXX	         += -I$(INCLUDEDIR) $(BOOST)
 # TARGETS #
 ###########
 
-all: makeRetina 
+all: Retina 
 
-makeRetina: makeRetina.cc RetinaTrackFitter
-		$(CXX) $(CXXFLAGS) -o makeRetina.o RetinaTrackFitter.o $(GLIBS)  $(LDFLAGS)  $<
+Retina: Retina.cc HitsGenerator LayerGeometry RetinaTrackFitter CommonFuncs.cpp
+		$(CXX) $(CXXFLAGS) -o Retina.o LayerGeometry.o HitsGenerator.o RetinaTrackFitter.o CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
 
-RetinaTrackFitter: RetinaTrackFitter.cpp
+RetinaSimple: RetinaSimple.cc LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp
+		$(CXX) $(CXXFLAGS) -o RetinaSimple.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
+
+RetinaTrackFitter: RetinaTrackFitter.cpp CommonFuncs.cpp
 		$(CXX) $(CXXFLAGS) -c RetinaTrackFitter.cpp -o RetinaTrackFitter.o
+
+ConformalTransf: ConformalTransf.cpp CommonFuncs.cpp
+		$(CXX) $(CXXFLAGS) -c ConformalTransf.cpp -o ConformalTransf.o
+
+HitsGenerator: HitsGenerator.cpp CommonFuncs.cpp 
+		$(CXX) $(CXXFLAGS) -c HitsGenerator.cpp -o HitsGenerator.o 
+
+HitCollection: HitCollection.cpp CommonFuncs.cpp
+		$(CXX) $(CXXFLAGS) -c HitCollection.cpp -o HitCollection.o
+
+LayerGeometry: LayerGeometry.cpp CommonFuncs.cpp
+		$(CXX) $(CXXFLAGS) -c LayerGeometry.cpp -o LayerGeometry.o
+
+#CommonFuncs: CommonFuncs.cpp
+#		$(CXX) $(CXXFLAGS) -o CommonFuncs.o $(GLIBS)  $(LDFLAGS)  $<
 
 clean:
 	rm -f *.o *~
