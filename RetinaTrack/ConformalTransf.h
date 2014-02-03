@@ -12,11 +12,16 @@
 
 class ConformalTransf {
 public:
-	ConformalTransf(HitCollection hitCollection_);
+	ConformalTransf();
 	virtual ~ConformalTransf();
 
-	HitCollection getHitCollection() {return hitCollection;};
+	void setNormHitCollection(HitCollection hitCollection_) {normHitCollection = hitCollection_;};
+	void setConfHitCollection(HitCollection hitCollection_) {confHitCollection = hitCollection_;};
+	HitCollection getNormHitCollection() {return normHitCollection;};
+	HitCollection getConfHitCollection() {return confHitCollection;};
+
 	void from_cart_to_polar(bool do_it = false);
+	void from_polar_to_cart(bool do_it = false);
 
 private:
 
@@ -25,7 +30,8 @@ private:
 	inline double get_x(double u, double v) { return u / (u*u + v*v);};
 	inline double get_y(double u, double v) { return v / (u*u + v*v);};
 
-	HitCollection hitCollection;
+	HitCollection normHitCollection;
+	HitCollection confHitCollection;
 
 };
 

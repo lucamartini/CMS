@@ -7,8 +7,53 @@
  *
  */
 
+#include "LayerGeometry.h"
+#include "HitCollection.h"
 #include "HitsGenerator.h"
+#include "ConformalTransf.h"
 #include "RetinaTrackFitter.h"
+
+void drawCircles(HitCollection hitCollection, vector <circlePoint> circleCollection, double R_gen_) {
+
+	unsigned int hits_n = hitCollection.size();
+	TGraph hits_h(hits_n);
+	double pt = 0.3 * 3.8 * R_gen_ / 100.;
+	hits_h.SetTitle(Form("Hits and retina circles, p_{T} = %.f GeV", pt));
+	vector <hit> * hitcollref = hitCollection.getHitCollectionRef();
+	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
+		hits_h.SetPoint(hit_i, hitcollref->at(hit_i).x, hitcollref->at(hit_i).y);
+	}
+	TCanvas c("c", "c", 600, 600);
+	hits_h.GetXaxis()->SetLimits(0., hits_h.GetXaxis()->GetXmax());
+	hits_h.GetYaxis()->SetRangeUser(0., hits_h.GetYaxis()->GetXmax());
+	hits_h.GetXaxis()->SetTitle("x[cm]");
+	hits_h.GetYaxis()->SetTitle("y[cm]");
+	hits_h.Draw("A*");
+
+//	string circle_leg;
+//	TEllipse circle_origin(a_gen_, b_gen_, R_gen_);
+//	circle_origin.SetNoEdges();
+//	circle_origin.SetLineColor(kRed);
+//	circle_origin.SetLineStyle(2);
+//	circle_origin.SetFillStyle(0);
+//	circle_origin.Draw("same");
+
+	unsigned int circles_size = circleCollection.size();
+	vector <TEllipse*> circle_f;
+	circle_f.resize(circles_size);
+	for (unsigned int circle_i = 0; circle_i < circles_size; circle_i++) {
+		double a = circleCollection[circle_i].a;
+		double b = circleCollection[circle_i].b;
+		double R = sqrt(a*a + b*b);
+		circle_f[circle_i] = new TEllipse(a, b, R);
+		circle_f[circle_i]->SetNoEdges();
+		circle_f[circle_i]->SetLineColor(kBlue + circle_i);
+		circle_f[circle_i]->SetFillStyle(0);
+		circle_f[circle_i]->Draw("same");
+	}
+
+	c.Print(Form("figs/hitsRetinaCircles.pdf"));
+}
 
 void DrawCanvas(TH1D h) {
 	TCanvas c("c", "c", 600, 600);
@@ -39,20 +84,21 @@ int main(int argc, char* argv[]) {
 	// r = 2R cos (phi - phi0) origin lies on circle
 
 	unsigned int pbins(32);
-	unsigned int qbins(12);
-  double pmin(0.5);
-  double pmax(10.);
-  double qmin(0.);
-  double qmax(0.03);
+	unsigned int qbins(32);
+  double pmin(0.);
+  double pmax(1.);
+  double qmin(0.0005);
+  double qmax(0.002);
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
+	double sigma = 0.001;
 	cout << "qstep = " << qstep << " /cm; pstep = " << pstep << endl;
 	TH1D pt_res("pt_res", "p_{T} resolution;[GeV]", 100, -10., 10.);
 	TH1D phi_res("phi_res", "#phi resolution;[rad]", 100, -.2, .2);
-	TH1D p_res("p_res", "p resolution / p step;[p]", 100, -1, 1);
-	TH1D q_res("q_res", "q resolution / q step;[q]", 100, -1, 1);
+	TH1D p_res("circle_p_res", "p resolution / p step;[p]", 100, -1, 1);
+	TH1D q_res("circle_q_res", "q resolution / q step;[q]", 100, -1, 1);
 	TH2D pt_phi_res("pt_phi_res", "pt_phi_res;p_{T}[GeV];#phi", 20, -10., 10., 20, -2., 2.);
-	TH2D p_q_res("p_q_res", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
+	TH2D p_q_res("circle_p_q_res", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
 
   vector <double> phi0;
   // let's take second phi sector: [pi/4, pi/2]
@@ -63,75 +109,66 @@ int main(int argc, char* argv[]) {
   	phi_i += pi/48.;
   }
 
-  vector <double> R;
-  R.push_back(180.);
-  R.push_back(260.);
-  R.push_back(350.);
-//  R.push_back(1750.);
-//  R.push_back(8770.);
-
-	int size_phi = phi0.size();
-	int size_R = R.size();
-
 	LayerGeometry LG;
+	TRandom3 rand;
+	cout << "seed: " << rand.GetSeed() << endl; //4357
 
-	for (int i = 0; i < size_phi; i++) {
-		for (int j = 0; j < size_R; j++) {
-//			if (i != 1 || j != 0) continue;
-			cout << endl << "r_gen, phi_gen = " << R[j] << ", " << phi0[i] << endl;
-			HitsGenerator HG(LG, cylinder);
-			HG.addCircle(R[j], phi0[i], false);
-//			HG.addCircle(R[j], phi0[i+1], false);
-			HG.cleanHitsRPhi(0., 100000., pi/4., pi/2.);
-			vector <hit> hitscollection = HG.getHitCollection();
-			unsigned int hits = hitscollection.size();
-			cout << "hits = " << hits << endl;
-			if (hits == 0) continue;
+	bool done = false;
+	int i = 0;
+	while (!done) {
+//	for (int i = 0; i < 1000; i++) {
 
-			RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, false, Form("%d_%d", i, j));
-			rtf.setR(R[j]);
-			rtf.setPhi(phi0[i]);
-			rtf.setA(R[j], phi0[i]);
-			rtf.setB(R[j], phi0[i]);
+		Double_t phi_rnd = rand.Uniform(pi/2.,pi) + rand.Integer(2)*pi;
+		Double_t k_rnd = rand.Uniform(1e-4, 5.e-3);
+		Double_t r_rnd = 1./k_rnd;
+		cout << "Curvature radius = " << r_rnd << "; Center phi = " << phi_rnd << endl;
+		string name(Form("simple_%d", i));
+		HitsGenerator HG(LG, cylinder, name); //plain
+		HG.addCircle(r_rnd, phi_rnd);
+		HG.cleanHitsRPhi(20., 120., 0., pi/4.);
 
-			rtf.drawHits();
+		HitCollection hitscollection = HG.getHitCollection();
+		unsigned int hits = hitscollection.size();
+		if (hits < 6) continue;
+		else done = true;
+		cout << "hits = " << hits << endl;
+		hitscollection.printHits();
 
-			rtf.setConfHits();
-			pqPoint pqtrue = rtf.drawHitsConf();
+		ConformalTransf CF;
+		CF.setNormHitCollection(hitscollection);
+		CF.from_cart_to_polar(true);
+		HitCollection confhitscollection = CF.getConfHitCollection();
 
-			rtf.fillPQGrid();
-			rtf.drawPQGrid();
+		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, false, name);
 
-			rtf.findMaxima();
-			rtf.printMaxima();
-			rtf.drawHitsConfRetina();
+		rtf.fillPQGrid();
 
-			rtf.getCircles();
-			rtf.drawCircles();
+		rtf.findMaxima();
+		rtf.printMaxima();
 
-			track track_ij = rtf.getBestTrack();
-			double pt_reco = track_ij.pt;
-			if (pt_reco < 0.) continue;
-			double phi_reco = track_ij.phi;
+		confhitscollection.drawHits(1);
+		rtf.drawPQGrid();
+		rtf.drawTracks();
 
-			double pt_res_d = pt_reco - R[j]/100.*0.3*3.8;
-			double phi_res_d = phi_reco - phi0[i];
-			pt_res.Fill(pt_res_d);
-			phi_res.Fill(phi_res_d);
-			pt_phi_res.Fill(pt_res_d, phi_res_d);
-			pqPoint bestpq = rtf.getBestPQ();
-			double p_res_d = (bestpq.p - pqtrue.p)/pstep;
-			double q_res_d = (bestpq.q - pqtrue.q)/qstep;
-			p_res.Fill(p_res_d);
-			q_res.Fill(q_res_d);
-			p_q_res.Fill(p_res_d, q_res_d);
+		CF.setConfHitCollection(confhitscollection);
+		CF.from_polar_to_cart(true);
+		HitCollection normhitscollection = CF.getNormHitCollection();
+		normhitscollection.drawHits(false);
 
-		}
+		vector <circlePoint> cp =	rtf.getCircles();
+		drawCircles(normhitscollection, cp , r_rnd);
+
+
+		pqPoint bestpq = rtf.getBestPQ();
+		if (bestpq.w < 0.) continue;
+		double p_res_d = (bestpq.p - tan(phi_rnd))/pstep;
+		double q_res_d = (bestpq.q - r_rnd)/qstep;
+		p_res.Fill(p_res_d);
+		q_res.Fill(q_res_d);
+		p_q_res.Fill(p_res_d, q_res_d);
 	}
 
-	DrawCanvas(pt_res);
-	DrawCanvas(phi_res);
-	DrawCanvas2(pt_phi_res);
+	gStyle->SetOptStat(111111);
 	DrawCanvas(p_res);
 	DrawCanvas(q_res);
 	DrawCanvas2(p_q_res);

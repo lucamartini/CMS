@@ -36,6 +36,7 @@ public:
 	void addHit(hit hit) {hitCollection.push_back(hit);};
 	vector <hit> * getHitCollectionRef() {return &hitCollection;};
 
+	void printHits();
 	void drawHits(bool fit);
 
 private:

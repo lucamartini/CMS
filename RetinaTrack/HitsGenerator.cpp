@@ -8,10 +8,10 @@
 #include "HitsGenerator.h"
 
 HitsGenerator::HitsGenerator(LayerGeometry LG_, geometry geo_, string name_) :
-hitCollection(name_),
-LG(LG_),
-geo(geo_),
-name(name_) {
+	hitCollection(name_),
+	LG(LG_),
+	geo(geo_),
+	name(name_) {
 }
 
 HitsGenerator::~HitsGenerator() {

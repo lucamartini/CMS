@@ -42,8 +42,7 @@ public:
 	void drawPQGrid();
 	void findMaxima();
 	void printMaxima();
-	void getCircles();
-	void drawCircles();
+	vector <circlePoint> getCircles();
 	void drawTracks();
 
 	track getBestTrack();

@@ -42,3 +42,10 @@ void HitCollection::drawHits(bool fit) {
 	}
 	c.Print(Form("figs/hits_%s.pdf", name.c_str()));
 }
+
+void HitCollection::printHits(){
+	unsigned int hits_n = hitCollection.size();
+	for (unsigned int i = 0; i < hits_n; i++) {
+		cout << "hit # " << i+1 << " / " << hits_n << " : x = " << hitCollection[i].x << "; y = " << hitCollection[i].y << endl;
+	}
+}

@@ -74,7 +74,8 @@ void RetinaTrackFitter::drawPQGrid() {
 	}
 	gStyle->SetPalette(53);
 	gStyle->SetPaintTextFormat("5.2f");
-	TCanvas c("c", "c", 600, 600);
+	TCanvas c("c", "c", 650, 600);
+	c.SetRightMargin(0.1346749);
 	pq_h.SetStats(false);
 	string draw_s("COLZTEXT");
 	if (qbins > 30 || pbins > 30) draw_s = "COLZ";
@@ -95,7 +96,7 @@ void RetinaTrackFitter::findMaxima() {
 	        && Grid[i][j] > Grid[i-1][j-1]
 	        && Grid[i][j] > Grid[i-1][j+1]
 	 ) {
-				if (Grid[i][j] < 0.25) continue; // cleaning
+				if (Grid[i][j] < 0.2) continue; // cleaning
 				pqPoint_i point_i;
 				point_i.p = i;
 				point_i.q = j;
@@ -113,11 +114,11 @@ pqPoint RetinaTrackFitter::findMaximumInterpolated(pqPoint_i point_i, double w) 
 
 	double p_mean = 0.;
 	double q_mean = 0.;
-	cout << "p = " << (pmax-pmin)/pbins * (p_i) + pmin << "   q = " <<  (qmax-qmin)/qbins * (q_i) + qmin << "  w = " << w << endl;
-	p_mean =  ((pmax-pmin)/pbins * (p_i-1) + pmin) * pow(Grid[p_i-1][q_i],2) +
-						((pmax-pmin)/pbins * (p_i) + pmin) * pow(Grid[p_i][q_i],2) +
-						((pmax-pmin)/pbins * (p_i+1) + pmin) * pow(Grid[p_i+1][q_i],2);
-	p_mean /= pow(Grid[p_i-1][q_i],2) + pow(Grid[p_i][q_i],2) + pow(Grid[p_i+1][q_i],2);
+//	cout << "p = " << (pmax-pmin)/pbins * (p_i) + pmin << "   q = " <<  (qmax-qmin)/qbins * (q_i) + qmin << "  w = " << w << endl;
+	p_mean =  ((pmax-pmin)/pbins * (p_i-1) + pmin) * Grid[p_i-1][q_i] +
+						((pmax-pmin)/pbins * (p_i) + pmin) * Grid[p_i][q_i] +
+						((pmax-pmin)/pbins * (p_i+1) + pmin) * Grid[p_i+1][q_i];
+	p_mean /= Grid[p_i-1][q_i] + Grid[p_i][q_i] + Grid[p_i+1][q_i];
 
 
 	q_mean =  ((qmax-qmin)/qbins * (q_i-1) + qmin) * Grid[p_i][q_i-1] +
@@ -135,13 +136,13 @@ pqPoint RetinaTrackFitter::findMaximumInterpolated(pqPoint_i point_i, double w) 
 
 void RetinaTrackFitter::printMaxima() {
 	unsigned int size = pqCollection.size();
-	cout << "MAXIMA p , q:" << endl;
+	cout << "MAXIMA p , q , w:" << endl;
 	for (unsigned int i = 0; i < size; i++) {
-		cout << pqCollection[i].p << " , " << pqCollection[i].q << endl;
+		cout << pqCollection[i].p << " , " << pqCollection[i].q << " , " << pqCollection[i].w << endl;
 	}
 }
 
-void RetinaTrackFitter::getCircles() {
+vector <circlePoint> RetinaTrackFitter::getCircles() {
 	unsigned int lines_size = pqCollection.size();
 	for (unsigned int line_i = 0; line_i < lines_size; line_i++) {
 		circlePoint circle_i;
@@ -150,48 +151,7 @@ void RetinaTrackFitter::getCircles() {
 		circleCollection.push_back(circle_i);
 		cout << "CIRCLE with RETINA: a = " << circle_i.a << "  b = " << circle_i.b << endl;
 	}
-}
-
-void RetinaTrackFitter::drawCircles() {
-
-	unsigned int hits_n = hitCollection.size();
-	TGraph hits_h(hits_n);
-	double pt = 0.3 * 3.8 * R_gen_ / 100.;
-	hits_h.SetTitle(Form("Hits and retina circles, p_{T} = %.f GeV", pt));
-	vector <hit> * hitcollref = hitCollection.getHitCollectionRef();
-	for (unsigned int hit_i = 0; hit_i < hits_n; hit_i++) {
-		hits_h.SetPoint(hit_i, hitcollref->at(hit_i).x, hitcollref->at(hit_i).y);
-	}
-	TCanvas c("c", "c", 600, 600);
-	hits_h.GetXaxis()->SetLimits(0., hits_h.GetXaxis()->GetXmax());
-	hits_h.GetYaxis()->SetRangeUser(0., hits_h.GetYaxis()->GetXmax());
-	hits_h.GetXaxis()->SetTitle("x[cm]");
-	hits_h.GetYaxis()->SetTitle("y[cm]");
-	hits_h.Draw("A*");
-
-	string circle_leg;
-	TEllipse circle_origin(a_gen_, b_gen_, R_gen_);
-	circle_origin.SetNoEdges();
-	circle_origin.SetLineColor(kRed);
-	circle_origin.SetLineStyle(2);
-	circle_origin.SetFillStyle(0);
-	circle_origin.Draw("same");
-
-	unsigned int circles_size = circleCollection.size();
-	vector <TEllipse*> circle_f;
-	circle_f.resize(circles_size);
-	for (unsigned int circle_i = 0; circle_i < circles_size; circle_i++) {
-		double a = circleCollection[circle_i].a;
-		double b = circleCollection[circle_i].b;
-		double R = sqrt(a*a + b*b);
-		circle_f[circle_i] = new TEllipse(a, b, R);
-		circle_f[circle_i]->SetNoEdges();
-		circle_f[circle_i]->SetLineColor(kBlue + circle_i);
-		circle_f[circle_i]->SetFillStyle(0);
-		circle_f[circle_i]->Draw("same");
-	}
-
-	c.Print(Form("figs/hitsRetina_%s.pdf", name_.c_str()));
+	return circleCollection;
 }
 
 void RetinaTrackFitter::drawTracks() {
@@ -216,12 +176,12 @@ void RetinaTrackFitter::drawTracks() {
 	for (unsigned int line_i = 0; line_i < line_size; line_i++) {
 		double p = pqCollection[line_i].p;
 		double q = pqCollection[line_i].q;
-		lines[line_i] = new TF1(Form("line_%d", line_i), Form("%f*x+%f", p, q), 0, 200.);
+		lines[line_i] = new TF1(Form("line_%d", line_i), Form("%f*x+%f", p, q), 0, 1200.);
 		lines[line_i]->SetLineColor(kBlue + (short int)line_i);
 		lines[line_i]->Draw("same");
 	}
 
-	c.Print(Form("figs/hitsRetina_%s.pdf", name_.c_str()));
+	c.Print(Form("figs/hitsRetinaTracks_%s.pdf", name_.c_str()));
 }
 
 track RetinaTrackFitter::getBestTrack() {
@@ -245,8 +205,9 @@ track RetinaTrackFitter::getBestTrack() {
 
 pqPoint RetinaTrackFitter::getBestPQ() {
 	unsigned int size = pqCollection.size();
-	double max = 0.1;
+	double max = 0.;
 	pqPoint bestPQ;
+	bestPQ.w = -1.;
 	for (unsigned int i = 0; i < size; i++) {
 		if (pqCollection[i].w > max) {
 			max = pqCollection[i].w;

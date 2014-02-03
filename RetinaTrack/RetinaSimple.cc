@@ -39,15 +39,16 @@ int main(int argc, char* argv[]) {
 	// pt = 100 GeV --> R = 87.7 m = 8770 cm
 	// r = 2R cos (phi - phi0) origin lies on circle
 
-	unsigned int pbins(20);
-	unsigned int qbins(40);
-	double pmin(0.);
-	double pmax(1000.);
-	double qmin(-0.2);
-	double qmax(0.2);
+	unsigned int pbins(40);
+	unsigned int qbins(200);
+	double pmin(-0.1);
+	double pmax(2.0);
+	double qmin(-1000);
+	double qmax(1000);
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
-	cout << "qstep = " << qstep << " /cm; pstep = " << pstep << endl;
+	double sigma = 100;
+	cout << "qstep = " << qstep << " cm; pstep = " << pstep << endl;
 	TH1D p_res("p_res", "p resolution / p step;[p]", 100, -1, 1.);
 	TH1D q_res("q_res", "q resolution / q step;[q]", 100, -1, 1.);
 	TH2D p_q_res("p_q_res", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -0.5, 0.5);
@@ -56,36 +57,33 @@ int main(int argc, char* argv[]) {
 	TRandom3 rand;
 	cout << "seed: " << rand.GetSeed() << endl; //4357
 
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 1000; i++) {
 
-
-		Double_t phi_rnd = rand.Uniform(pi/2);
-		Double_t b_rnd = rand.Gaus(0., 0.01);
+		Double_t phi_rnd = rand.Uniform(pi/4.);
+		Double_t b_rnd = 0;
+		b_rnd = rand.Gaus(0., 1.);
 //if (i == 0) continue;
 		string name(Form("simple_%d", i));
-		HitsGenerator HG(LG, plain, name);
+		HitsGenerator HG(LG, plain, name); //plain
 		HG.addLine(phi_rnd, b_rnd); // p = 1; q = 0
 
 		HitCollection hitscollection = HG.getHitCollection();
 		unsigned int hits = hitscollection.size();
 //		cout << "hits = " << hits << endl;
 
-		ConformalTransf CF(hitscollection);
-		CF.from_cart_to_polar(false);
-		HitCollection confhitscollection = CF.getHitCollection();
-
-		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, 0.1, false, name);
+		RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, false, name);
 
 		rtf.fillPQGrid();
 
 		rtf.findMaxima();
-		rtf.printMaxima();
+//		rtf.printMaxima();
 
-		hitscollection.drawHits(1);
-		rtf.drawPQGrid();
-		rtf.drawTracks();
+//		hitscollection.drawHits(1);
+//		rtf.drawPQGrid();
+//		rtf.drawTracks();
 
 		pqPoint bestpq = rtf.getBestPQ();
+		if (bestpq.w < 0.) continue;
 		double p_res_d = (bestpq.p - tan(phi_rnd))/pstep;
 		double q_res_d = (bestpq.q - b_rnd)/qstep;
 		p_res.Fill(p_res_d);
