@@ -18,6 +18,8 @@
 #include "TAxis.h"
 #include "TStyle.h"
 
+#include "CommonFuncs.h"
+
 using namespace std;
 
 struct hit {
@@ -37,7 +39,7 @@ public:
 	vector <hit> * getHitCollectionRef() {return &hitCollection;};
 
 	void printHits();
-	void drawHits(bool fit);
+	pqPoint drawHits(bool fit, bool draw = true);
 
 private:
 	string name;

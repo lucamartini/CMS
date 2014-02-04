@@ -30,10 +30,10 @@ CXX	         += -I$(INCLUDEDIR) $(BOOST)
 # TARGETS #
 ###########
 
-all: Retina 
+all: Retina RetinaSimple
 
-Retina: Retina.cc HitsGenerator LayerGeometry RetinaTrackFitter CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -o Retina.o LayerGeometry.o HitsGenerator.o RetinaTrackFitter.o CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
+Retina: Retina.cc LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp
+		$(CXX) $(CXXFLAGS) -o Retina.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
 
 RetinaSimple: RetinaSimple.cc LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp
 		$(CXX) $(CXXFLAGS) -o RetinaSimple.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<

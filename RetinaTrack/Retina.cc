@@ -50,16 +50,20 @@ void drawCircles(HitCollection hitCollection, vector <circlePoint> circleCollect
 }
 
 
-
 int main(int argc, char* argv[]) {
 
+	int events = 1;
 	bool draw = false;
 	for (int i = 1; i < argc; i++) {
 	  if (!strcmp(argv[i],"-d")) {
 	    draw = true;
 	    cout << "drawing plots for each event" << endl;
 	  }
+	  if (!strcmp(argv[i],"-n")) {
+	    events = atoi(argv[i+1]);
+	  }
 	}
+	cout << "events = " << events << endl;
 
 	// pt = 2 GeV
 	// B = 3.8 T
@@ -71,45 +75,44 @@ int main(int argc, char* argv[]) {
 	// pt = 100 GeV --> R = 87.7 m = 8770 cm
 	// r = 2R cos (phi - phi0) origin lies on circle
 
-	unsigned int pbins(32);
-	unsigned int qbins(32);
+	unsigned int pbins(20);
+	unsigned int qbins(20);
   double pmin(0.);
-  double pmax(1.);
+  double pmax(0.5);
   double qmin(0.0005);
   double qmax(0.002);
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
-	double sigma = 0.001;
+	double sigma = 0.0003;
 	cout << "qstep = " << qstep << " /cm; pstep = " << pstep << endl;
-	TH1D pt_res("pt_res", "p_{T} resolution;[GeV]", 100, -10., 10.);
-	TH1D phi_res("phi_res", "#phi resolution;[rad]", 100, -.2, .2);
-	TH1D p_res("circle_p_res", "p resolution / p step;[p]", 100, -1, 1);
-	TH1D q_res("circle_q_res", "q resolution / q step;[q]", 100, -1, 1);
-	TH2D pt_phi_res("pt_phi_res", "pt_phi_res;p_{T}[GeV];#phi", 20, -10., 10., 20, -2., 2.);
-	TH2D p_q_res("circle_p_q_res", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
+	TH1D pt_res("pt_res_circle", "p_{T} resolution;[GeV]", 100, -10., 10.);
+	TH1D phi_res("phi_res_circle", "#phi resolution;[rad]", 100, -.2, .2);
+	TH1D p_res("circle_p_res_circle", "p resolution / p step;[p]", 100, -1, 1);
+	TH1D q_res("circle_q_res_circle", "q resolution / q step;[q]", 100, -1, 1);
+	TH2D pt_phi_res("pt_phi_res_circle", "pt_phi_res;p_{T}[GeV];#phi", 20, -10., 10., 20, -2., 2.);
+	TH2D p_q_res("circle_p_q_res_circle", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
 
 	LayerGeometry LG;
 	TRandom3 rand;
 	cout << "seed: " << rand.GetSeed() << endl; //4357
 
-	bool done = false;
-	int i = 0;
-	while (!done) {
-//	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < events; i++) {
 
 		Double_t phi_rnd = rand.Uniform(pi/2.,pi) + rand.Integer(2)*pi;
 		Double_t k_rnd = rand.Uniform(1e-4, 5.e-3);
 		Double_t r_rnd = 1./k_rnd;
-		cout << "Curvature radius = " << r_rnd << "; Center phi = " << phi_rnd << endl;
-		string name(Form("simple_%d", i));
+//		cout << "Curvature radius = " << r_rnd << "; Center phi = " << phi_rnd << endl;
+		string name(Form("circle_%d", i));
 		HitsGenerator HG(LG, cylinder, name); //plain
 		HG.addCircle(r_rnd, phi_rnd);
 		HG.cleanHitsRPhi(20., 120., 0., pi/4.);
 
 		HitCollection hitscollection = HG.getHitCollection();
 		unsigned int hits = hitscollection.size();
-		if (hits < 6) continue;
-		else done = true;
+		if (hits < 6) { // skip events with few generated hits
+			i--;
+			continue;
+		}
 		if (draw) {
 			cout << "hits = " << hits << endl;
 			hitscollection.printHits();
@@ -126,29 +129,27 @@ int main(int argc, char* argv[]) {
 
 		rtf.findMaxima();
 
+		vector <circlePoint> cp =	rtf.getCircles();
+
+		pqPoint truepq = confhitscollection.drawHits(true, draw);
 		if (draw) {
 			rtf.printMaxima();
 
-			confhitscollection.drawHits(1);
 			rtf.drawPQGrid();
 			rtf.drawTracks();
-		}
 
-		CF.setConfHitCollection(confhitscollection);
-		CF.from_polar_to_cart(true);
-		HitCollection normhitscollection = CF.getNormHitCollection();
-		normhitscollection.drawHits(false);
+			CF.setConfHitCollection(confhitscollection);
+			CF.from_polar_to_cart(true);
+			HitCollection normhitscollection = CF.getNormHitCollection();
+			normhitscollection.drawHits(false);
 
-		if (draw) {
-			vector <circlePoint> cp =	rtf.getCircles();
 			drawCircles(normhitscollection, cp , r_rnd);
 		}
 
-
 		pqPoint bestpq = rtf.getBestPQ();
 		if (bestpq.w < 0.) continue;
-		double p_res_d = (bestpq.p - tan(phi_rnd))/pstep;
-		double q_res_d = (bestpq.q - r_rnd)/qstep;
+		double p_res_d = (bestpq.p - truepq.p)/pstep;
+		double q_res_d = (bestpq.q - truepq.q)/qstep;
 		p_res.Fill(p_res_d);
 		q_res.Fill(q_res_d);
 		p_q_res.Fill(p_res_d, q_res_d);

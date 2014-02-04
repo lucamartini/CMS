@@ -18,7 +18,7 @@ HitCollection::HitCollection( const HitCollection& other ) {
 	hitCollection = other.hitCollection;
 }
 
-void HitCollection::drawHits(bool fit) {
+pqPoint HitCollection::drawHits(bool fit, bool draw) {
 	unsigned int hits_n = hitCollection.size();
 	TGraph hits_h(hits_n);
 	hits_h.SetTitle("Hits");
@@ -31,14 +31,22 @@ void HitCollection::drawHits(bool fit) {
 	hits_h.GetXaxis()->SetTitle("x[cm]");
 	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
+	pqPoint pqpoint;
 	if (fit) {
 		gStyle->SetOptFit(1111);
-		hits_h.Fit("pol1");
+		hits_h.Fit("pol1", draw ? "" : "q");
 		TF1* fun = hits_h.GetFunction("pol1");
 		fun->SetParNames("q","p");
 		c.Update();
+
+		pqpoint.p = fun->GetParameter("p");
+		pqpoint.q = fun->GetParameter("q");
+		pqpoint.w = 1.;
 	}
-	c.Print(Form("figs/hits_%s.pdf", name.c_str()));
+	else pqpoint.w = -1.;
+	if (draw) c.Print(Form("figs/hits_%s.pdf", name.c_str()));
+
+	return pqpoint;
 }
 
 void HitCollection::printHits(){

@@ -97,7 +97,7 @@ void RetinaTrackFitter::findMaxima() {
 	        && Grid[i][j] > Grid[i-1][j-1]
 	        && Grid[i][j] > Grid[i-1][j+1]
 	 ) {
-				if (Grid[i][j] < 0.2) continue; // cleaning
+				if (Grid[i][j] < 0.5) continue; // cleaning
 				pqPoint_i point_i;
 				point_i.p = i;
 				point_i.q = j;
@@ -150,7 +150,7 @@ vector <circlePoint> RetinaTrackFitter::getCircles() {
 		circle_i.a = get_a(pqCollection[line_i].p, pqCollection[line_i].q);
 		circle_i.b = get_b(pqCollection[line_i].p, pqCollection[line_i].q);
 		circleCollection.push_back(circle_i);
-		cout << "CIRCLE with RETINA: a = " << circle_i.a << "  b = " << circle_i.b << endl;
+//		cout << "CIRCLE with RETINA: a = " << circle_i.a << "  b = " << circle_i.b << endl;
 	}
 	return circleCollection;
 }
