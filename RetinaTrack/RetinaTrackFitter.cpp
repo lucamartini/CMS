@@ -19,7 +19,6 @@ RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int 
   parabola_b(parabola),
   name_(name)
 {
-//	hitsConf_h = new TGraph(0);
 //	cout << "CIRCLE GENERATED: a = " << a_gen_ << "  b = " << b_gen_ << endl;
 	makeGrid();
 }
@@ -77,6 +76,8 @@ void RetinaTrackFitter::drawPQGrid() {
 	TCanvas c("c", "c", 650, 600);
 	c.SetRightMargin(0.1346749);
 	pq_h.SetStats(false);
+	pq_h.SetMaximum(1.);
+	pq_h.SetMinimum(0.);
 	string draw_s("COLZTEXT");
 	if (qbins > 30 || pbins > 30) draw_s = "COLZ";
 	pq_h.Draw(draw_s.c_str());

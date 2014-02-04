@@ -3,29 +3,26 @@
  *
  *  Created on: 21/gen/2014
  *      Author: lucamartini
+ *
+ *      Test retina with straight lines
+ *
  */
 
 #include "LayerGeometry.h"
 #include "HitCollection.h"
-#include "HitsGenerator.h"
 #include "ConformalTransf.h"
 #include "RetinaTrackFitter.h"
 
-void DrawCanvas(TH1D h) {
-	TCanvas c("c", "c", 600, 600);
-	h.Draw();
-	c.Print(Form("figs/%s.pdf", h.GetName()));
-}
-
-void DrawCanvas2(TH2D h) {
-	gStyle->SetPalette(54);
-	TCanvas c("c", "c", 600, 600);
-	h.SetStats(false);
-	h.Draw("COLZ");
-	c.Print(Form("figs/%s.pdf", h.GetName()));
-}
-
 int main(int argc, char* argv[]) {
+
+	bool draw = false;
+	for (int i = 1; i < argc; i++) {
+	  if (!strcmp(argv[i],"-d")) {
+	        draw = true;
+	        cout << "drawing plots for each event" << endl;
+	   }
+	}
+
 //	double pi;
 //	pi = acos(-1);
 
@@ -39,7 +36,7 @@ int main(int argc, char* argv[]) {
 	// pt = 100 GeV --> R = 87.7 m = 8770 cm
 	// r = 2R cos (phi - phi0) origin lies on circle
 
-	unsigned int pbins(40);
+	unsigned int pbins(200);
 	unsigned int qbins(200);
 	double pmin(-0.1);
 	double pmax(2.0);
@@ -57,7 +54,7 @@ int main(int argc, char* argv[]) {
 	TRandom3 rand;
 	cout << "seed: " << rand.GetSeed() << endl; //4357
 
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 1; i++) {
 
 		Double_t phi_rnd = rand.Uniform(pi/4.);
 		Double_t b_rnd = 0;
@@ -76,11 +73,13 @@ int main(int argc, char* argv[]) {
 		rtf.fillPQGrid();
 
 		rtf.findMaxima();
-//		rtf.printMaxima();
+		if (draw) {
+			rtf.printMaxima();
 
-//		hitscollection.drawHits(1);
-//		rtf.drawPQGrid();
-//		rtf.drawTracks();
+			hitscollection.drawHits(1);
+			rtf.drawPQGrid();
+			rtf.drawTracks();
+		}
 
 		pqPoint bestpq = rtf.getBestPQ();
 		if (bestpq.w < 0.) continue;

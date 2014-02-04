@@ -8,14 +8,12 @@
 #include "LayerGeometry.h"
 
 LayerGeometry::LayerGeometry() {
-	// TODO Auto-generated constructor stub
 	setLayersR();
 	setLayersPlain();
 	setLayersCylinder();
 }
 
 LayerGeometry::~LayerGeometry() {
-	// TODO Auto-generated destructor stub
 }
 
 void LayerGeometry::setLayersR() {

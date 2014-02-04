@@ -8,21 +8,15 @@
 #ifndef HITSGENERATOR_H_
 #define HITSGENERATOR_H_
 
-
 #include <iostream>
 
 #include "TRandom3.h"
-
 #include "CommonFuncs.h"
 
 #include "LayerGeometry.h"
 #include "HitCollection.h"
 
-//using namespace std;
-
 enum geometry {plain, cylinder};
-
-
 
 class HitsGenerator {
 public:

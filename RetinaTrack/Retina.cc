@@ -5,11 +5,13 @@
  *      Author: lucamartini
  *
  *
+ *      Test retina with circles transformed to lines with a conformal transformation
+ *
+ *
  */
 
 #include "LayerGeometry.h"
 #include "HitCollection.h"
-#include "HitsGenerator.h"
 #include "ConformalTransf.h"
 #include "RetinaTrackFitter.h"
 
@@ -30,14 +32,6 @@ void drawCircles(HitCollection hitCollection, vector <circlePoint> circleCollect
 	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
 
-//	string circle_leg;
-//	TEllipse circle_origin(a_gen_, b_gen_, R_gen_);
-//	circle_origin.SetNoEdges();
-//	circle_origin.SetLineColor(kRed);
-//	circle_origin.SetLineStyle(2);
-//	circle_origin.SetFillStyle(0);
-//	circle_origin.Draw("same");
-
 	unsigned int circles_size = circleCollection.size();
 	vector <TEllipse*> circle_f;
 	circle_f.resize(circles_size);
@@ -55,23 +49,17 @@ void drawCircles(HitCollection hitCollection, vector <circlePoint> circleCollect
 	c.Print(Form("figs/hitsRetinaCircles.pdf"));
 }
 
-void DrawCanvas(TH1D h) {
-	TCanvas c("c", "c", 600, 600);
-	h.Draw();
-	c.Print(Form("figs/%s.pdf", h.GetName()));
-}
 
-void DrawCanvas2(TH2D h) {
-	gStyle->SetPalette(54);
-	TCanvas c("c", "c", 600, 600);
-	h.SetStats(false);
-	h.Draw("COLZ");
-	c.Print(Form("figs/%s.pdf", h.GetName()));
-}
 
 int main(int argc, char* argv[]) {
-//	double pi;
-//	pi = acos(-1);
+
+	bool draw = false;
+	for (int i = 1; i < argc; i++) {
+	  if (!strcmp(argv[i],"-d")) {
+	    draw = true;
+	    cout << "drawing plots for each event" << endl;
+	  }
+	}
 
 	// pt = 2 GeV
 	// B = 3.8 T
@@ -100,15 +88,6 @@ int main(int argc, char* argv[]) {
 	TH2D pt_phi_res("pt_phi_res", "pt_phi_res;p_{T}[GeV];#phi", 20, -10., 10., 20, -2., 2.);
 	TH2D p_q_res("circle_p_q_res", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
 
-  vector <double> phi0;
-  // let's take second phi sector: [pi/4, pi/2]
-  double phi_i = 3*pi/4.;
-  // phi_i += pi/24;
-  while (phi_i < pi) {
-  	phi0.push_back(phi_i);
-  	phi_i += pi/48.;
-  }
-
 	LayerGeometry LG;
 	TRandom3 rand;
 	cout << "seed: " << rand.GetSeed() << endl; //4357
@@ -131,8 +110,10 @@ int main(int argc, char* argv[]) {
 		unsigned int hits = hitscollection.size();
 		if (hits < 6) continue;
 		else done = true;
-		cout << "hits = " << hits << endl;
-		hitscollection.printHits();
+		if (draw) {
+			cout << "hits = " << hits << endl;
+			hitscollection.printHits();
+		}
 
 		ConformalTransf CF;
 		CF.setNormHitCollection(hitscollection);
@@ -144,19 +125,24 @@ int main(int argc, char* argv[]) {
 		rtf.fillPQGrid();
 
 		rtf.findMaxima();
-		rtf.printMaxima();
 
-		confhitscollection.drawHits(1);
-		rtf.drawPQGrid();
-		rtf.drawTracks();
+		if (draw) {
+			rtf.printMaxima();
+
+			confhitscollection.drawHits(1);
+			rtf.drawPQGrid();
+			rtf.drawTracks();
+		}
 
 		CF.setConfHitCollection(confhitscollection);
 		CF.from_polar_to_cart(true);
 		HitCollection normhitscollection = CF.getNormHitCollection();
 		normhitscollection.drawHits(false);
 
-		vector <circlePoint> cp =	rtf.getCircles();
-		drawCircles(normhitscollection, cp , r_rnd);
+		if (draw) {
+			vector <circlePoint> cp =	rtf.getCircles();
+			drawCircles(normhitscollection, cp , r_rnd);
+		}
 
 
 		pqPoint bestpq = rtf.getBestPQ();

@@ -12,17 +12,6 @@
 #include <iostream>
 #include <math.h>
 
-#include "TGraph.h"
-#include "TCanvas.h"
-#include "TAxis.h"
-#include "TF1.h"
-#include "TH2D.h"
-#include "TStyle.h"
-#include "TPaveText.h"
-#include "TEllipse.h"
-
-#include "CommonFuncs.h"
-
 #include "HitsGenerator.h"
 
 using namespace std;

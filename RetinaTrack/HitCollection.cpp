@@ -11,11 +11,9 @@ HitCollection::HitCollection(string name_) : name(name_) {
 }
 
 HitCollection::~HitCollection() {
-	// TODO Auto-generated destructor stub
 }
 
 HitCollection::HitCollection( const HitCollection& other ) {
-//	cout << "copy constructor" << endl;
 	name = other.name;
 	hitCollection = other.hitCollection;
 }
