@@ -85,11 +85,8 @@ int main(int argc, char* argv[]) {
 	double pstep = (pmax-pmin)/(double)pbins;
 	double sigma = 0.0003;
 	cout << "qstep = " << qstep << " /cm; pstep = " << pstep << endl;
-	TH1D pt_res("pt_res_circle", "p_{T} resolution;[GeV]", 100, -10., 10.);
-	TH1D phi_res("phi_res_circle", "#phi resolution;[rad]", 100, -.2, .2);
 	TH1D p_res("circle_p_res_circle", "p resolution / p step;[p]", 100, -1, 1);
 	TH1D q_res("circle_q_res_circle", "q resolution / q step;[q]", 100, -1, 1);
-	TH2D pt_phi_res("pt_phi_res_circle", "pt_phi_res;p_{T}[GeV];#phi", 20, -10., 10., 20, -2., 2.);
 	TH2D p_q_res("circle_p_q_res_circle", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
 
 	LayerGeometry LG;
