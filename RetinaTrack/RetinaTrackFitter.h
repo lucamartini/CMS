@@ -18,7 +18,7 @@ using namespace std;
 
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, bool parabola = false, string name = "");
+	RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, string name = "");
 	virtual ~RetinaTrackFitter();
 
 	void setHitCollection(HitCollection hitCollection_) {hitCollection = hitCollection_;};
@@ -31,6 +31,7 @@ public:
 	void drawPQGrid();
 	void findMaxima();
 	void printMaxima();
+	vector <pqPoint> getPQCollection() {return pqCollection;};
 	vector <circlePoint> getCircles();
 	void drawTracks();
 
@@ -66,8 +67,6 @@ private:
   double qmin;
   double qmax;
   double sigma;
-
-  bool parabola_b;
 
   string name_;
 

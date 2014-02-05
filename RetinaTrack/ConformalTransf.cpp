@@ -13,7 +13,7 @@ ConformalTransf::ConformalTransf() : normHitCollection("norm"), confHitCollectio
 ConformalTransf::~ConformalTransf() {
 }
 
-void ConformalTransf::from_cart_to_polar(bool do_it) {
+void ConformalTransf::from_norm_to_conf(bool do_it) {
 	if (!do_it) return;
 	unsigned int hits_n = normHitCollection.size();
 	vector <hit> * hitcollref = normHitCollection.getHitCollectionRef();
@@ -29,7 +29,7 @@ void ConformalTransf::from_cart_to_polar(bool do_it) {
 	}
 }
 
-void ConformalTransf::from_polar_to_cart(bool do_it) {
+void ConformalTransf::from_conf_to_norm(bool do_it) {
 	if (!do_it) return;
 	unsigned int hits_n = confHitCollection.size();
 	vector <hit> * hitcollref = confHitCollection.getHitCollectionRef();

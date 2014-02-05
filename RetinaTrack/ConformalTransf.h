@@ -20,8 +20,8 @@ public:
 	HitCollection getNormHitCollection() {return normHitCollection;};
 	HitCollection getConfHitCollection() {return confHitCollection;};
 
-	void from_cart_to_polar(bool do_it = false);
-	void from_polar_to_cart(bool do_it = false);
+	void from_norm_to_conf(bool do_it = false);
+	void from_conf_to_norm(bool do_it = false);
 
 private:
 

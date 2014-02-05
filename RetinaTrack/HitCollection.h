@@ -33,12 +33,12 @@ public:
 	virtual ~HitCollection();
 	HitCollection( const HitCollection& other );
 
-	unsigned int size() {return hitCollection.size();};
 	string getName() {return name;};
+	unsigned int size() {return hitCollection.size();};
 	void addHit(hit hit) {hitCollection.push_back(hit);};
-	vector <hit> * getHitCollectionRef() {return &hitCollection;};
-
 	void printHits();
+
+	vector <hit> * getHitCollectionRef() {return &hitCollection;};
 	pqPoint drawHits(bool fit, bool draw = true);
 
 private:

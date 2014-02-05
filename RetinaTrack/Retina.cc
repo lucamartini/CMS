@@ -120,10 +120,10 @@ int main(int argc, char* argv[]) {
 
 		ConformalTransf CF;
 		CF.setNormHitCollection(hitscollection);
-		CF.from_cart_to_polar(true);
+		CF.from_norm_to_conf(true);
 		HitCollection confhitscollection = CF.getConfHitCollection();
 
-		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, false, name);
+		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, name);
 
 		rtf.fillPQGrid();
 
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
 			rtf.drawTracks();
 
 			CF.setConfHitCollection(confhitscollection);
-			CF.from_polar_to_cart(true);
+			CF.from_conf_to_norm(true);
 			HitCollection normhitscollection = CF.getNormHitCollection();
 			normhitscollection.drawHits(false);
 

@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
 		pqPoint truepq = hitscollection.drawHits(true, draw);
 
-		RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, false, name);
+		RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, name);
 
 		rtf.fillPQGrid();
 

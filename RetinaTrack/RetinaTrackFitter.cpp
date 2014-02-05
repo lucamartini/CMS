@@ -7,7 +7,7 @@
 
 #include "RetinaTrackFitter.h"
 
-RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, bool parabola, string name) :
+RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, string name) :
   hitCollection(hitCollection_),
 	pbins(pbins_),
   qbins(qbins_),
@@ -16,7 +16,6 @@ RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int 
   qmin(qmin_),
   qmax(qmax_),
   sigma(sigma_),
-  parabola_b(parabola),
   name_(name)
 {
 //	cout << "CIRCLE GENERATED: a = " << a_gen_ << "  b = " << b_gen_ << endl;
