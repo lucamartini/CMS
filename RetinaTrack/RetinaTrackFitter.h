@@ -18,7 +18,7 @@ using namespace std;
 
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, string name = "");
+	RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, double minWeight_, string name = "");
 	virtual ~RetinaTrackFitter();
 
 	void setHitCollection(HitCollection hitCollection_) {hitCollection = hitCollection_;};
@@ -67,6 +67,7 @@ private:
   double qmin;
   double qmax;
   double sigma;
+  double minWeight;
 
   string name_;
 

@@ -84,6 +84,7 @@ int main(int argc, char* argv[]) {
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
 	double sigma = 0.0003;
+	double minWeight = 0.5;
 	cout << "qstep = " << qstep << " /cm; pstep = " << pstep << endl;
 	TH1D p_res("circle_p_res_circle", "p resolution / p step;[p]", 100, -1, 1);
 	TH1D q_res("circle_q_res_circle", "q resolution / q step;[q]", 100, -1, 1);
@@ -120,7 +121,7 @@ int main(int argc, char* argv[]) {
 		CF.from_norm_to_conf(true);
 		HitCollection confhitscollection = CF.getConfHitCollection();
 
-		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, name);
+		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, minWeight, name);
 
 		rtf.fillPQGrid();
 

@@ -49,6 +49,7 @@ int main(int argc, char* argv[]) {
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
 	double sigma = 2;
+	double minWeight = 0.5;
 	cout << "qstep = " << qstep << " cm; pstep = " << pstep << endl;
 	TH1D p_res("p_res_line", "p resolution / p step;[p]", 100, -1, 1.);
 	TH1D q_res("q_res_line", "q resolution / q step;[q]", 100, -1, 1.);
@@ -73,7 +74,7 @@ int main(int argc, char* argv[]) {
 
 		pqPoint truepq = hitscollection.drawHits(true, draw);
 
-		RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, name);
+		RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, minWeight, name);
 
 		rtf.fillPQGrid();
 
