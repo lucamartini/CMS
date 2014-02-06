@@ -8,6 +8,8 @@
  *
  */
 
+#include <stdlib.h>
+
 #include "LayerGeometry.h"
 #include "HitCollection.h"
 #include "ConformalTransf.h"
