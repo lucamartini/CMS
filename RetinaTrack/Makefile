@@ -27,27 +27,27 @@ CXX	         += -I$(INCLUDEDIR)
 all: Retina RetinaSimple
 
 Retina: Retina.cc LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -o Retina.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
+		$(CXX) $(CXXFLAGS) -o Retina LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
 
 RetinaSimple: RetinaSimple.cc LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -o RetinaSimple.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
+		$(CXX) $(CXXFLAGS) -o RetinaSimple LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
 
 RetinaTrackFitter: RetinaTrackFitter.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c RetinaTrackFitter.cpp -o RetinaTrackFitter.o
+		$(CXX) $(CXXFLAGS) -c RetinaTrackFitter.cpp -o RetinaTrackFitter
 
 ConformalTransf: ConformalTransf.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c ConformalTransf.cpp -o ConformalTransf.o
+		$(CXX) $(CXXFLAGS) -c ConformalTransf.cpp -o ConformalTransf
 
 HitsGenerator: HitsGenerator.cpp CommonFuncs.cpp 
-		$(CXX) $(CXXFLAGS) -c HitsGenerator.cpp -o HitsGenerator.o 
+		$(CXX) $(CXXFLAGS) -c HitsGenerator.cpp -o HitsGenerator 
 
 HitCollection: HitCollection.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c HitCollection.cpp -o HitCollection.o
+		$(CXX) $(CXXFLAGS) -c HitCollection.cpp -o HitCollection
 
 LayerGeometry: LayerGeometry.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c LayerGeometry.cpp -o LayerGeometry.o
+		$(CXX) $(CXXFLAGS) -c LayerGeometry.cpp -o LayerGeometry
 
 clean:
-	rm -f *.o *~
+	rm Retina RetinaSimple LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter
 
 

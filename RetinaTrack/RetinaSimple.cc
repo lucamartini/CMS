@@ -8,7 +8,7 @@
  *
  */
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "LayerGeometry.h"
 #include "HitCollection.h"
