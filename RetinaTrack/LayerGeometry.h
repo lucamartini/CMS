@@ -42,7 +42,7 @@ private:
 
 	vector <line> barrel_layers_plain;
 	vector <circle> barrel_layers_cylinder;
-	vector < double > barrel_layer_r;
+	vector <double> barrel_layer_r;
 
 };
 

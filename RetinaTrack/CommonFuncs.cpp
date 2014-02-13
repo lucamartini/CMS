@@ -8,17 +8,11 @@
 
 double pi = acos(-1);
 
-void DrawCanvas(TH1D h) {
-	TCanvas c("c", "c", 600, 600);
-	h.Draw();
-	c.Print(Form("figs/%s.pdf", h.GetName()));
-}
-
 void DrawCanvas2(TH2D h) {
 	gStyle->SetPalette(54);
 	TCanvas c("c", "c", 600, 600);
+	c.SetRightMargin(0.1346749);
 	h.SetStats(false);
 	h.Draw("COLZ");
-	c.Print(Form("figs/%s.pdf", h.GetName()));
+	c.Print(Form("figs/%s.png", h.GetName()));
 }
-

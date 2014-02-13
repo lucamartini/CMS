@@ -12,6 +12,8 @@
 #include <iostream>
 #include <math.h>
 
+#include "TLatex.h"
+
 #include "HitsGenerator.h"
 
 using namespace std;
@@ -32,10 +34,10 @@ public:
 	void findMaxima();
 	void printMaxima();
 	vector <pqPoint> getPQCollection() {return pqCollection;};
-	vector <circlePoint> getCircles();
-	void drawTracks();
+	vector <circle> getCircles();
 
 	track getBestTrack();
+	circle getBestCircle();
 	pqPoint getBestPQ();
 
 private:
@@ -47,6 +49,7 @@ private:
 
 	void makeGrid();
 	double getResponse(double p_temp, double q_temp);
+	double getResponsePol(double gamma_temp, double b_temp);
 
 	pqPoint findMaximumInterpolated(pqPoint_i point_i, double w);
 
@@ -54,7 +57,7 @@ private:
   HitCollection hitCollection;
 
   vector <pqPoint> pqCollection;
-  vector <circlePoint> circleCollection;
+  vector <circle> circleCollection;
 
   double R_gen_;
   double phi0_gen_;
@@ -64,8 +67,11 @@ private:
   unsigned int qbins;
   double pmin;
   double pmax;
+  double offset;
   double qmin;
   double qmax;
+  double pbinsize;
+  double qbinsize;
   double sigma;
   double minWeight;
 

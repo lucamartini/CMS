@@ -40,6 +40,7 @@ pqPoint HitCollection::drawHits(bool fit, bool draw) {
 		c.Update();
 
 		pqpoint.p = fun->GetParameter("p");
+//		pqpoint.p = atan(fun->GetParameter("p"));
 		pqpoint.q = fun->GetParameter("q");
 		pqpoint.w = 1.;
 	}
@@ -54,4 +55,26 @@ void HitCollection::printHits(){
 	for (unsigned int i = 0; i < hits_n; i++) {
 		cout << "hit # " << i+1 << " / " << hits_n << " : x = " << hitCollection[i].x << "; y = " << hitCollection[i].y << endl;
 	}
+}
+
+double HitCollection::highestX(){
+	double maxX = 0.;
+	unsigned int hits_n = hitCollection.size();
+	for (unsigned int i = 0; i < hits_n; i++) {
+		if (hitCollection.at(i).x > maxX) {
+			maxX = hitCollection.at(i).x;
+		}
+	}
+	return maxX;
+}
+
+double HitCollection::highestY(){
+	double maxY = 0.;
+	unsigned int hits_n = hitCollection.size();
+	for (unsigned int i = 0; i < hits_n; i++) {
+		if (hitCollection.at(i).y > maxY) {
+			maxY = hitCollection.at(i).y;
+		}
+	}
+	return maxY;
 }

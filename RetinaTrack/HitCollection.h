@@ -34,7 +34,10 @@ public:
 	HitCollection( const HitCollection& other );
 
 	string getName() {return name;};
+	void setName(string name_) {name = name_;};
 	unsigned int size() {return hitCollection.size();};
+	double highestX();
+	double highestY();
 	void addHit(hit hit) {hitCollection.push_back(hit);};
 	void printHits();
 

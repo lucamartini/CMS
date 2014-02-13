@@ -89,7 +89,6 @@ void HitsGenerator::addCircle(double R_gen, double phi0_gen, bool random_leg) {
 void HitsGenerator::addLine(double phi, double b) {
 	unsigned int  barrel_layer_size = LG.get_layer_size();
 	for (unsigned int i = 0; i < barrel_layer_size; i++) {
-
 		double x;
 		double y;
 		if (geo == cylinder) {
