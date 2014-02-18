@@ -54,8 +54,10 @@ double RetinaTrackFitter::getResponse(double m_temp, double b_temp) {
 	vector <hit> * hitcollref = hitCollection.getHitCollectionRef();
 	for (unsigned int kr = 0; kr < hits_tot; kr++) {
 
-		double y_k = (hitcollref->at(kr).y - b_temp) / m_temp;  // y = mx + b   -->
+		double y_k = (hitcollref->at(kr).y - b_temp) / m_temp;  // <-- y = mx + b --> x = (y-b)/m
 		double Sijkr = hitcollref->at(kr).x - y_k;
+
+//		if ( Sijkr / sigma > 3. ) continue; // cut outliers
 
 //		Sijkr = fabs((hitcollref->at(kr).y - m_temp*hitcollref->at(kr).x - b_temp) / sqrt(1. + m_temp*m_temp));
 
@@ -66,7 +68,8 @@ double RetinaTrackFitter::getResponse(double m_temp, double b_temp) {
 //		cout << " y = px + q =>" << hitcollref->at(kr).y << " = " << p_temp << " * " << y_k << " + " << q_temp;
 //		cout <<  "   u = " << hitcollref->at(kr).x  <<  endl;
 	}
-	Rij /= hits_tot;
+//	Rij /= hits_tot;
+//	if (Rij < minWeight) Rij = 1e-6; // cleaning
 	if (Rij < 1e-6) return 1e-6;
 	else return Rij;
 }
@@ -89,7 +92,7 @@ double RetinaTrackFitter::getResponsePol(double gamma_temp, double b_temp) {
 //		cout << " y = px + q =>" << hitcollref->at(kr).y << " = " << p_temp << " * " << y_k << " + " << q_temp;
 //		cout <<  "   u = " << hitcollref->at(kr).x  <<  endl;
 	}
-	Rij /= hits_tot;
+//	Rij /= hits_tot;
 	if (Rij < 1e-6) return 1e-6;
 	else return Rij;
 }
@@ -107,7 +110,7 @@ void RetinaTrackFitter::drawPQGrid() {
 	TCanvas c("c", "c", 650, 600);
 	c.SetRightMargin(0.1346749);
 	pq_h.SetStats(false);
-	pq_h.SetMaximum(1.);
+	pq_h.SetMaximum(6.);
 	pq_h.SetMinimum(0.);
 	string draw_s("COLZTEXT");
 	if (qbins > 30 || pbins > 30) draw_s = "COLZ";
@@ -148,16 +151,38 @@ pqPoint RetinaTrackFitter::findMaximumInterpolated(pqPoint_i point_i, double w) 
 	double p_mean = 0.;
 	double q_mean = 0.;
 //	cout << "p = " << (pmax-pmin)/pbins * (p_i) + pmin << "   q = " <<  (qmax-qmin)/qbins * (q_i) + qmin << "  w = " << w << endl;
-	p_mean =  (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i] +
-						(pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i] +
-						(pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i];
-	p_mean /= Grid[p_i-1][q_i] + Grid[p_i][q_i] + Grid[p_i+1][q_i];
+	p_mean = (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i] +
+					 (pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i] +
+					 (pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i];
+
+	p_mean += (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i-1] +
+						(pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i-1] +
+						(pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i-1];
+
+	p_mean += (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i+1] +
+						(pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i+1] +
+						(pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i+1];
+
+	p_mean /= (Grid[p_i-1][q_i] + Grid[p_i][q_i] + Grid[p_i+1][q_i] +
+						 Grid[p_i-1][q_i-1] + Grid[p_i][q_i-1] + Grid[p_i+1][q_i-1] +
+						 Grid[p_i-1][q_i+1] + Grid[p_i][q_i+1] + Grid[p_i+1][q_i+1]);
 
 
 	q_mean =  (qmin + qbinsize * (q_i - 0.5)) * Grid[p_i][q_i-1] +
 						(qmin + qbinsize * (q_i + 0.5)) * Grid[p_i][q_i] +
 						(qmin + qbinsize * (q_i + 1.5)) * Grid[p_i][q_i+1];
-	q_mean /= Grid[p_i][q_i-1] + Grid[p_i][q_i] + Grid[p_i][q_i+1];
+
+	q_mean += (qmin + qbinsize * (q_i - 0.5)) * Grid[p_i-1][q_i-1] +
+						(qmin + qbinsize * (q_i + 0.5)) * Grid[p_i-1][q_i] +
+						(qmin + qbinsize * (q_i + 1.5)) * Grid[p_i-1][q_i+1];
+
+	q_mean += (qmin + qbinsize * (q_i - 0.5)) * Grid[p_i+1][q_i-1] +
+						(qmin + qbinsize * (q_i + 0.5)) * Grid[p_i+1][q_i] +
+						(qmin + qbinsize * (q_i + 1.5)) * Grid[p_i+1][q_i+1];
+
+	q_mean /= (Grid[p_i][q_i-1] + Grid[p_i][q_i] + Grid[p_i][q_i+1] +
+						 Grid[p_i-1][q_i-1] + Grid[p_i-1][q_i] + Grid[p_i-1][q_i+1] +
+						 Grid[p_i+1][q_i-1] + Grid[p_i+1][q_i] + Grid[p_i+1][q_i+1]);
 
 	pqPoint point_o;
 	point_o.p = p_mean;

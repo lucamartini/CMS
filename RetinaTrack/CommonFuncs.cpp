@@ -14,5 +14,5 @@ void DrawCanvas2(TH2D h) {
 	c.SetRightMargin(0.1346749);
 	h.SetStats(false);
 	h.Draw("COLZ");
-	c.Print(Form("figs/%s.png", h.GetName()));
+	c.Print(Form("figs/%s.pdf", h.GetName()));
 }

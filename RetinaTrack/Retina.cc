@@ -54,14 +54,14 @@ int main(int argc, char* argv[]) {
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
 	double sigma = 0.001;
-	double minWeight = 0.;
+	double minWeight = 4.;
 	cout << "qstep = " << qstep << " /cm; pstep = " << pstep << endl;
 	TH1D pt_res("pt_res_circle", "p_{T} resolution", 100, -100, 100);
 	TH2D p_q("p_q_circle", "p_q;p;q", pbins, pmin, pmax, qbins, qmin, qmax);
 	TH1D p_res("p_res_circle", "p resolution / p step;[p]", 100, -1, 1);
 	TH1D q_res("q_res_circle", "q resolution / q step;[q]", 100, -1, 1);
 	TH2D p_q_res("p_q_res_circle", "reduced p q resolution;[p];[q]", 20, -1., 1., 20, -1., 1.);
-	TH2D pt_pt_res("pt_pt_res", "gen / reco p_{T};reco p_T [GeV];gen p_T [GeV]", 50, 0., 50., 50, 0., 50.);
+	TH2D pt_gen_reco("pt_pt_res", "gen / reco p_{T};gen p_{T} [GeV];reco p_{T} [GeV]", 50, 0., 50., 50, 0., 50.);
 
 	LayerGeometry LG;
 	TRandom3 rand;
@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
 		double best_r = sqrt(bestcircle.a*bestcircle.a + bestcircle.b*bestcircle.b);
 		double pt_res_d = (best_r - r_rnd) * 0.3 / 100. * 3.8;
 		pt_res.Fill(pt_res_d);
-		pt_pt_res.Fill(best_r * 0.3 / 100. * 3.8, r_rnd * 0.3 / 100. * 3.8);
+		pt_gen_reco.Fill(r_rnd* 0.3 / 100. * 3.8, best_r * 0.3 / 100. * 3.8);
 	}
 
 	gStyle->SetOptStat(111111);
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
 	DrawCanvas2(p_q_res);
 
 	DrawCanvas(pt_res);
-	DrawCanvas2(pt_pt_res);
+	DrawCanvas2(pt_gen_reco);
 
 	return EXIT_SUCCESS;
 }

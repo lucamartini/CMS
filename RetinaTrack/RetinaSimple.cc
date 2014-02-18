@@ -33,30 +33,35 @@ int main(int argc, char* argv[]) {
 	}
 	cout << "events = " << events << endl;
 
-	unsigned int pbins(41);
-	unsigned int qbins(11);
+	unsigned int pbins(21);
+	unsigned int qbins(21);
 //	double pmin(0.05);
 //	double pmax(1.05);
 //	double qmin(-0.06);
 //	double qmax(0.06);
 //	double sigma = 2;
-	double pmin(-0.1);
-	double pmax(2.0);
+	double pmin(0.05);
+	double pmax(1.1);
 	double qmin(-50);
 	double qmax(50);
 	double sigma = 6;
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
 
-	double minWeight = 0.;
-	cout << "qstep = " << qstep << " cm; pstep = " << pstep << endl;
+	sigma = sqrt(qstep*pstep*1000);
+//	sigma = 1;
+
+	double minWeight = 2.;
+	cout << "qstep = " << qstep << " cm; pstep = " << pstep << "; sigma = " << sigma << endl;
 	TH1D p_res("p_res_line", "p resolution / p step;[p]", 100, -2., 2.);
 	TH1D q_res("q_res_line", "q resolution / q step;[q]", 100, -2., 2.);
 	TH2D p_q_res("p_q_res_line", "reduced p q resolution;[p];[q]", 50, -2., 2., 50, -2., 2.);
 	TH1D m_h("m_h", "m_h", pbins, pmin, pmax);
 	TH1D b_h("b_h", "b_h", qbins, qmin, qmax);
 	TH1I multiplicity_h("multiplicity_h", "multiplicity_h", 10, -0.5, 9.5);
-	TH2D p_q("p_q_line", "p_q;p;q", pbins, pmin, pmax, qbins, qmin, qmax);
+	TH2D p_q("p_q_gen_line", "gen p q;p;q", pbins*10., pmin, pmax, qbins*10., qmin, qmax);
+	TH2D p_gen_reco("p_gen_reco", "p gen / reco;gen p;reco p", pbins*10., pmin, pmax, pbins*10., pmin, pmax);
+	TH2D q_gen_reco("q_gen_reco", "q gen / reco;gen q;reco q", qbins*10., qmin, qmax, qbins*10., qmin, qmax);
 
 	LayerGeometry LG;
 	TRandom3 rand;
@@ -66,7 +71,7 @@ int main(int argc, char* argv[]) {
 
 		Double_t phi_rnd = rand.Uniform(0.1, pi/4.);
 		Double_t b_rnd = 0;
-		b_rnd = rand.Gaus(0., .1);
+		b_rnd = rand.Gaus(0., 10.);
 //		b_rnd = rand.Uniform(0., 1.);
 
 		m_h.Fill(tan(phi_rnd));
@@ -112,6 +117,10 @@ int main(int argc, char* argv[]) {
 		p_res.Fill(p_res_d);
 		q_res.Fill(q_res_d);
 		p_q_res.Fill(p_res_d, q_res_d);
+
+		p_gen_reco.Fill(truepq.p, bestpq.p);
+		q_gen_reco.Fill(truepq.q, bestpq.q);
+
 	}
 
 	gStyle->SetOptStat(111111);
@@ -125,6 +134,9 @@ int main(int argc, char* argv[]) {
 	DrawCanvas(m_h);
 	DrawCanvas(b_h);
 	DrawCanvas(multiplicity_h);
+
+	DrawCanvas2(p_gen_reco);
+	DrawCanvas2(q_gen_reco);
 
 	return EXIT_SUCCESS;
 }
