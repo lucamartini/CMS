@@ -3,7 +3,7 @@ ROOTGLIBS     = $(shell root-config --glibs)
 
 CXX           = g++
 CXXFLAGS      = -fPIC -ansi -D_GNU_SOURCE -O2 -Wall -Wextra 
-LDFLAGS       = -g3 -lMinuit -lFoam -lGraf -lPostscript
+LDFLAGS       = -g3 
 
 SOFLAGS       = -shared
 
@@ -26,28 +26,37 @@ CXX	         += -I$(INCLUDEDIR)
 
 all: Retina RetinaSimple
 
-Retina: Retina.cc LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -o Retina LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
+Retina: Retina.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o
+	$(CXX) -o $@ $^  $(LDFLAGS) $(GLIBS)
 
-RetinaSimple: RetinaSimple.cc LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -o RetinaSimple LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter CommonFuncs.cpp $(GLIBS)  $(LDFLAGS)  $<
+RetinaSimple: RetinaSimple.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o
+	$(CXX) -o $@ $^  $(LDFLAGS) $(GLIBS)
 
-RetinaTrackFitter: RetinaTrackFitter.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c RetinaTrackFitter.cpp -o RetinaTrackFitter
+Retina.o: Retina.cc print.h
+	$(CXX) $(CXXFLAGS) -c Retina.cc -o $@
 
-ConformalTransf: ConformalTransf.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c ConformalTransf.cpp -o ConformalTransf
+RetinaSimple.o: RetinaSimple.cc print.h
+	$(CXX) $(CXXFLAGS) -c RetinaSimple.cc -o $@
 
-HitsGenerator: HitsGenerator.cpp CommonFuncs.cpp 
-		$(CXX) $(CXXFLAGS) -c HitsGenerator.cpp -o HitsGenerator 
+RetinaTrackFitter.o: RetinaTrackFitter.cpp RetinaTrackFitter.h
+	$(CXX) $(CXXFLAGS) -c RetinaTrackFitter.cpp  -o $@
 
-HitCollection: HitCollection.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c HitCollection.cpp -o HitCollection
+ConformalTransf.o: ConformalTransf.cpp ConformalTransf.h
+	$(CXX) $(CXXFLAGS) -c ConformalTransf.cpp -o $@
 
-LayerGeometry: LayerGeometry.cpp CommonFuncs.cpp
-		$(CXX) $(CXXFLAGS) -c LayerGeometry.cpp -o LayerGeometry
+HitsGenerator.o: HitsGenerator.cpp HitsGenerator.h
+	$(CXX) $(CXXFLAGS) -c HitsGenerator.cpp -o $@
+
+HitCollection.o: HitCollection.cpp HitCollection.h
+	$(CXX) $(CXXFLAGS) -c HitCollection.cpp -o $@
+
+LayerGeometry.o: LayerGeometry.cpp LayerGeometry.h
+	$(CXX) $(CXXFLAGS) -c LayerGeometry.cpp -o $@
+
+CommonFuncs.o: CommonFuncs.cpp CommonFuncs.h
+	$(CXX) $(CXXFLAGS) -c CommonFuncs.cpp -o $@
 
 clean:
-	rm Retina RetinaSimple LayerGeometry HitCollection HitsGenerator ConformalTransf RetinaTrackFitter
+	rm -f Retina RetinaSimple Retina.o RetinaSimple.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o
 
 
