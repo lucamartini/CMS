@@ -20,7 +20,7 @@ using namespace std;
 
 class RetinaTrackFitter {
 public:
-	RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, double minWeight_, string name = "");
+	RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, double minWeight_, string name = "", int para_ = 0);
 	virtual ~RetinaTrackFitter();
 
 	void setHitCollection(HitCollection hitCollection_) {hitCollection = hitCollection_;};
@@ -49,6 +49,7 @@ private:
 
 	void makeGrid();
 	double getResponse(double p_temp, double q_temp);
+	double getResponseRistori(double x_plus, double x_minus);
 	double getResponsePol(double gamma_temp, double b_temp);
 
 	pqPoint findMaximumInterpolated(pqPoint_i point_i, double w);
@@ -76,6 +77,8 @@ private:
   double minWeight;
 
   string name_;
+  int para;
+  vector <line> layers;
 
 };
 

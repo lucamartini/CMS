@@ -7,7 +7,7 @@
 
 #include "RetinaTrackFitter.h"
 
-RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, double minWeight_, string name) :
+RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int pbins_, unsigned int qbins_, double pmin_, double pmax_, double qmin_, double qmax_, double sigma_, double minWeight_, string name, int para_) :
   hitCollection(hitCollection_),
 	pbins(pbins_),
   qbins(qbins_),
@@ -18,11 +18,16 @@ RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int 
   qmax(qmax_+offset),
   sigma(sigma_),
   minWeight(minWeight_),
-  name_(name)
+  name_(name),
+  para(para_)
 {
 	pbinsize = (pmax-pmin)/pbins;
 	qbinsize = (qmax-qmin)/qbins;
 	makeGrid();
+
+	LayerGeometry LG;
+	layers = LG.get_barrel_layers_plain();
+
 }
 
 RetinaTrackFitter::~RetinaTrackFitter() {
@@ -40,8 +45,9 @@ void RetinaTrackFitter::fillPQGrid() {
 		for (unsigned int j = 0; j < qbins; j++) {
 			double p_value = pmin + pbinsize * (i + 0.5);
 			double q_value = qmin + qbinsize * (j + 0.5);
-			Grid[i][j] = getResponse(p_value, q_value);
-//			Grid[i][j] = getResponsePol(p_value, q_value);
+			if (para == 0) Grid[i][j] = getResponse(p_value, q_value);
+			if (para == 1) Grid[i][j] = getResponseRistori(p_value, q_value);
+			if (para == 2) Grid[i][j] = getResponsePol(p_value, q_value);
 //			cout << i << " " << j << " p = " << p_value << " q = " << q_value << " w = " << Grid[i][j] << endl;
 		}
 	}
@@ -55,6 +61,41 @@ double RetinaTrackFitter::getResponse(double m_temp, double b_temp) {
 	for (unsigned int kr = 0; kr < hits_tot; kr++) {
 
 		double y_k = (hitcollref->at(kr).y - b_temp) / m_temp;  // <-- y = mx + b --> x = (y-b)/m
+		double Sijkr = hitcollref->at(kr).x - y_k;
+
+//		if ( Sijkr / sigma > 3. ) continue; // cut outliers
+
+//		Sijkr = fabs((hitcollref->at(kr).y - m_temp*hitcollref->at(kr).x - b_temp) / sqrt(1. + m_temp*m_temp));
+
+		double term = exp(Sijkr*Sijkr/(-2.*sigma*sigma));
+
+//		cout << y_k << "  " << Sijkr << "  " << term << endl;
+		Rij += term;
+//		cout << " y = px + q =>" << hitcollref->at(kr).y << " = " << p_temp << " * " << y_k << " + " << q_temp;
+//		cout <<  "   u = " << hitcollref->at(kr).x  <<  endl;
+	}
+//	Rij /= hits_tot;
+//	if (Rij < minWeight) Rij = 1e-6; // cleaning
+	if (Rij < 1e-6) return 1e-6;
+	else return Rij;
+}
+
+double RetinaTrackFitter::getResponseRistori(double x_plus, double x_minus) {
+//	cout << p_temp << " " << q_temp << endl;
+	double Rij = 0.;
+
+	double y0 = layers.at(0).q;
+	double y1 = layers.at(layers.size()-1).q;
+	double x0 = x_plus - x_minus;
+	double x1 = x_plus + x_minus;
+	double m = (y1 - y0) / (x1 - x0);
+	double b = y0 - m*x0;
+
+	unsigned int hits_tot = hitCollection.size();
+	vector <hit> * hitcollref = hitCollection.getHitCollectionRef();
+	for (unsigned int kr = 0; kr < hits_tot; kr++) {
+
+		double y_k = (hitcollref->at(kr).y - b) / m;  // <-- y = mx + b --> x = (y-b)/m
 		double Sijkr = hitcollref->at(kr).x - y_k;
 
 //		if ( Sijkr / sigma > 3. ) continue; // cut outliers

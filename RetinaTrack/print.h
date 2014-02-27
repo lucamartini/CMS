@@ -8,7 +8,7 @@
 #ifndef PRINT_H_
 #define PRINT_H_
 
-void drawTracks(HitCollection hitCollection, vector <pqPoint> pqCollection, pqPoint truepq, unsigned int best, int event, string name) {
+void drawTracks(HitCollection hitCollection, vector <pqPoint> pqCollection, pqPoint truepq, unsigned int best, int event, string name, LayerGeometry * LG, int para) {
 
 	unsigned int hits_n = hitCollection.size();
 	TGraph hits_h(hits_n);
@@ -28,15 +28,25 @@ void drawTracks(HitCollection hitCollection, vector <pqPoint> pqCollection, pqPo
 	unsigned int line_size = pqCollection.size();
 	vector <TF1*> lines(line_size);
 	for (unsigned int line_i = 0; line_i < line_size; line_i++) {
-		double p = pqCollection[line_i].p;
-		double q = pqCollection[line_i].q;
-		lines[line_i] = new TF1(Form("line_%d", line_i), Form("%f*x+%f", p, q), 0, max(1200., hitCollection.highestX()));
+		double m, b;
+		if (para == 0 ) {
+			m = pqCollection[line_i].p;
+			b = pqCollection[line_i].q;
+		}
+		if (para == 1) {
+			vector <line> layers = LG->get_barrel_layers_plain();
+			double y0 = layers.at(0).q;
+			double y1 = layers.at(layers.size()-1).q;
+			m = (y1 - y0) / (2 * pqCollection[line_i].q);
+			b = y0 - m*(pqCollection[line_i].p - pqCollection[line_i].q);
+		}
+		lines[line_i] = new TF1(Form("line_%d", line_i), Form("%f*x+%f", m, b), 0, max(1200., hitCollection.highestX()));
 		if (line_i == best) {
 			lines[line_i]->SetLineColor(kRed);
 			TLatex Tl;
 			Tl.SetTextSize(0.033);
 			Tl.SetTextColor(kRed);
-			Tl.DrawLatexNDC(0.11, 0.85, Form("y = %.2f x + %.2f", p, q));
+			Tl.DrawLatexNDC(0.11, 0.85, Form("y = %.2f x + %.2f", m, b));
 		}
 		else lines[line_i]->SetLineColor(kBlue);
 		lines[line_i]->Draw("same");

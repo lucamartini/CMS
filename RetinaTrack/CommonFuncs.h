@@ -22,6 +22,9 @@
 #include "TStyle.h"
 #include "TPaveText.h"
 #include "TEllipse.h"
+#include "TLatex.h"
+#include "TFitResult.h"
+#include "TFitResultPtr.h"
 
 struct hitConf {
 	double u;
@@ -59,6 +62,6 @@ template <typename T> void DrawCanvas(T h) {
 	c.Print(Form("figs/%s.pdf", h.GetName()));
 }
 
-extern void DrawCanvas2(TH2D h);
+extern void DrawCanvas2(TH2D h, bool fit = false);
 
 #endif /* COMMONFUNCS_H_ */

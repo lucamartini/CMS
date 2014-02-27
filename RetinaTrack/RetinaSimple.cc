@@ -21,6 +21,10 @@
 int main(int argc, char* argv[]) {
 
 	int events = 1;
+	// 0: y = mx + b
+	// 1: Ristori
+	// 2: polar
+	int para = 0;
 	bool draw = false;
 	for (int i = 1; i < argc; i++) {
 	  if (!strcmp(argv[i],"-d")) {
@@ -30,25 +34,40 @@ int main(int argc, char* argv[]) {
 	  if (!strcmp(argv[i],"-n")) {
 	  	events = atoi(argv[i+1]);
 	  }
+	  if (!strcmp(argv[i],"-p")) {
+	  	para = atoi(argv[i+1]);
+	  }
+	  if (!strcmp(argv[i],"-h")) {
+	  	cout << "-h \t print this help and exit" << endl <<
+	  			"-d \t drawing plots for each event \t\t default = false" << endl <<
+	  			"-n # \t set number of events \t\t\t default = 1" << endl <<
+	  			"-p # \t set parametrization of the grid: \t default = 0" << endl <<
+	  			"\t\t 0 : y = mx + b" << endl <<
+	  			"\t\t 1 : Ristori x_+ x_-" << endl <<
+	  			"\t\t 2 : polar" << endl;
+	  	return EXIT_SUCCESS;
+	  }
 	}
 	cout << "events = " << events << endl;
 
-	unsigned int pbins(21);
-	unsigned int qbins(21);
+	unsigned int pbins(40);
+	unsigned int qbins(40);
 //	double pmin(0.05);
 //	double pmax(1.05);
 //	double qmin(-0.06);
 //	double qmax(0.06);
 //	double sigma = 2;
-	double pmin(0.05);
-	double pmax(1.1);
-	double qmin(-50);
-	double qmax(50);
+//	double qmin(-50);
+//		double qmax(50);
+	double pmin(0.);
+	double pmax(200.);
+	double qmin(0.);
+	double qmax(200.);
 	double sigma = 6;
 	double qstep = (qmax-qmin)/(double)qbins;
 	double pstep = (pmax-pmin)/(double)pbins;
 
-	sigma = sqrt(qstep*pstep*1000);
+	sigma = sqrt(qstep*pstep);
 //	sigma = 1;
 
 	double minWeight = 2.;
@@ -66,13 +85,18 @@ int main(int argc, char* argv[]) {
 	LayerGeometry LG;
 	TRandom3 rand;
 	cout << "seed: " << rand.GetSeed() << endl; //4357
+	double pi_min = 0.;
+	double pi_max = pi/4.;
+	if (para == 1) {
+		pi_min = 0. + pi/8.;
+		pi_max = pi/4. + pi/8.;
+	}
 
 	for (int i = 0; i < events; i++) {
 
-		Double_t phi_rnd = rand.Uniform(0.1, pi/4.);
+		Double_t phi_rnd = rand.Uniform(pi_min, pi_max);
 		Double_t b_rnd = 0;
-		b_rnd = rand.Gaus(0., 10.);
-//		b_rnd = rand.Uniform(0., 1.);
+		b_rnd = rand.Gaus(0., 0.1);
 
 		m_h.Fill(tan(phi_rnd));
 		b_h.Fill(b_rnd);
@@ -86,7 +110,7 @@ int main(int argc, char* argv[]) {
 		pqPoint truepq = hitscollection.drawHits(true, draw);
 		p_q.Fill(truepq.p, truepq.q);
 
-		RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, minWeight, name);
+		RetinaTrackFitter rtf(hitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, minWeight, name, para);
 
 		rtf.fillPQGrid();
 
@@ -105,22 +129,47 @@ int main(int argc, char* argv[]) {
 					best = i;
 				}
 			}
-			drawTracks(hitscollection, rtf.getPQCollection(), truepq, best, i, "line");
+			drawTracks(hitscollection, rtf.getPQCollection(), truepq, best, i, "line", &LG, para);
 		}
 
 		multiplicity_h.Fill(rtf.getPQCollection().size());
 
 		pqPoint bestpq = rtf.getBestPQ();
 		if (bestpq.w < 0.) continue;
-		double p_res_d = (bestpq.p - truepq.p)/pstep;
-		double q_res_d = (bestpq.q - truepq.q)/qstep;
+
+		double m, b;
+		if (para == 0 ) {
+			m = bestpq.p;
+			b = bestpq.q;
+		}
+		if (para == 1) {
+			vector <line> layers = LG.get_barrel_layers_plain();
+			double y0 = layers.at(0).q;
+			double y1 = layers.at(layers.size()-1).q;
+			m = (y1 - y0) / (2 * bestpq.q);
+			b = y0 - m*(bestpq.p - bestpq.q);
+		}
+
+		double p_res_d = (m - truepq.p)/pstep;
+		double q_res_d = (b - truepq.q)/qstep;
 		p_res.Fill(p_res_d);
 		q_res.Fill(q_res_d);
 		p_q_res.Fill(p_res_d, q_res_d);
 
-		p_gen_reco.Fill(truepq.p, bestpq.p);
-		q_gen_reco.Fill(truepq.q, bestpq.q);
+		if (para == 0) {
+			p_gen_reco.Fill(truepq.p, m);
+			q_gen_reco.Fill(truepq.q, b);
+		}
+		if (para == 1) {
+			vector <line> layers = LG.get_barrel_layers_plain();
+			double y0 = layers.at(0).q;
+			double y1 = layers.at(layers.size()-1).q;
+			double x_plus = - truepq.q / truepq.p + (y1 + y0)/(2*truepq.p);
+			double y_minus = (y1 - y0) / (2*truepq.p);
 
+			p_gen_reco.Fill(x_plus, bestpq.p);
+			q_gen_reco.Fill(y_minus, bestpq.q);
+		}
 	}
 
 	gStyle->SetOptStat(111111);
@@ -135,8 +184,8 @@ int main(int argc, char* argv[]) {
 	DrawCanvas(b_h);
 	DrawCanvas(multiplicity_h);
 
-	DrawCanvas2(p_gen_reco);
-	DrawCanvas2(q_gen_reco);
+	DrawCanvas2(p_gen_reco, false);
+	DrawCanvas2(q_gen_reco, false);
 
 	return EXIT_SUCCESS;
 }

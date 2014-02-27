@@ -23,14 +23,31 @@
 int main(int argc, char* argv[]) {
 
 	int events = 1;
+	// 0: y = mx + b
+	// 1: Ristori
+	// 2: polar
+	int para = 0;
 	bool draw = false;
 	for (int i = 1; i < argc; i++) {
 	  if (!strcmp(argv[i],"-d")) {
-	    draw = true;
+	  	draw = true;
 	    cout << "drawing plots for each event" << endl;
 	  }
 	  if (!strcmp(argv[i],"-n")) {
-	    events = atoi(argv[i+1]);
+	  	events = atoi(argv[i+1]);
+	  }
+	  if (!strcmp(argv[i],"-p")) {
+	  	para = atoi(argv[i+1]);
+	  }
+	  if (!strcmp(argv[i],"-h")) {
+	  	cout << "-h \t print this help and exit" << endl <<
+	  			"-d \t drawing plots for each event \t\t default = false" << endl <<
+	  			"-n # \t set number of events \t\t\t default = 1" << endl <<
+	  			"-p # \t set parametrization of the grid: \t default = 0" << endl <<
+	  			"\t\t 0 : y = mx + b" << endl <<
+	  			"\t\t 1 : Ristori x_+ x_-" << endl <<
+	  			"\t\t 2 : polar" << endl;
+	  	return EXIT_SUCCESS;
 	  }
 	}
 	cout << "events = " << events << endl;
@@ -97,7 +114,7 @@ int main(int argc, char* argv[]) {
 		pqPoint truepq = confhitscollection.drawHits(true, draw);
 		p_q.Fill(truepq.p, truepq.q);
 
-		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, minWeight, name);
+		RetinaTrackFitter rtf(confhitscollection, pbins, qbins, pmin, pmax, qmin, qmax, sigma, minWeight, name, para);
 
 		rtf.fillPQGrid();
 
@@ -120,7 +137,7 @@ int main(int argc, char* argv[]) {
 					best = i;
 				}
 			}
-			drawTracks(confhitscollection, rtf.getPQCollection(), truepq, best, i, "circle");
+			drawTracks(confhitscollection, rtf.getPQCollection(), truepq, best, i, "circle", &LG, para);
 
 			CF.from_conf_to_norm(true);
 			HitCollection normhitscollection = CF.getNormHitCollection();
