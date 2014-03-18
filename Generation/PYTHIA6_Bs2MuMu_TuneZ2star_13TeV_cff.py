@@ -61,3 +61,4 @@ MuFilter = cms.EDFilter("PythiaFilter",
 )
 
 ProductionFilterSequence = cms.Sequence(generator*MuMuFilter*MuFilter)
+
