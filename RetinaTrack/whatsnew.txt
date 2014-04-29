@@ -1,0 +1,6 @@
+- weight is not divided by numhits anymore
+- interpolation in 3x3 square
+======
+- moved all plot functions outside retina class, into print.h
+- simplified grid binning
+- added some other control plots

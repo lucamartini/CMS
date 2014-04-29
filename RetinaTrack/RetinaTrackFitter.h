@@ -68,7 +68,6 @@ private:
   unsigned int qbins;
   double pmin;
   double pmax;
-  double offset;
   double qmin;
   double qmax;
   double pbinsize;

@@ -13,9 +13,8 @@ RetinaTrackFitter::RetinaTrackFitter(HitCollection hitCollection_, unsigned int 
   qbins(qbins_),
   pmin(pmin_),
   pmax(pmax_),
-  offset(0.),
-  qmin(qmin_+offset),
-  qmax(qmax_+offset),
+  qmin(qmin_),
+  qmax(qmax_),
   sigma(sigma_),
   minWeight(minWeight_),
   name_(name),
@@ -84,12 +83,12 @@ double RetinaTrackFitter::getResponseRistori(double x_plus, double x_minus) {
 //	cout << p_temp << " " << q_temp << endl;
 	double Rij = 0.;
 
-	double y0 = layers.at(0).q;
+	double y2 = layers.at(0).q;
 	double y1 = layers.at(layers.size()-1).q;
-	double x0 = x_plus - x_minus;
+	double x2 = x_plus - x_minus;
 	double x1 = x_plus + x_minus;
-	double m = (y1 - y0) / (x1 - x0);
-	double b = y0 - m*x0;
+	double m = (y1 - y2) / (x1 - x2);
+	double b = y2 - m*x2;
 
 	unsigned int hits_tot = hitCollection.size();
 	vector <hit> * hitcollref = hitCollection.getHitCollectionRef();
@@ -122,9 +121,9 @@ double RetinaTrackFitter::getResponsePol(double gamma_temp, double b_temp) {
 	vector <hit> * hitcollref = hitCollection.getHitCollectionRef();
 	for (unsigned int kr = 0; kr < hits_tot; kr++) {
 
-		double theta = atan2(hitcollref->at(kr).y+offset, hitcollref->at(kr).x);
+		double theta = atan2(hitcollref->at(kr).y, hitcollref->at(kr).x);
 
-		double y_k = (b_temp + offset) * cos(gamma_temp) * cos(theta) / sin(theta - gamma_temp); // shift away from origin
+		double y_k = (b_temp) * cos(gamma_temp) * cos(theta) / sin(theta - gamma_temp); // shift away from origin
 //		cout << "theta hit = " << theta <<  "   x test = " << y_k << endl;
 		double Sijkr = hitcollref->at(kr).x - y_k;
 		double term = exp(Sijkr*Sijkr/(-2.*sigma*sigma));
@@ -177,7 +176,7 @@ void RetinaTrackFitter::findMaxima() {
 				pqPoint_i point_i;
 				point_i.p = i;
 				point_i.q = j;
-//				cout << "not interpolated " << Grid[i][j] << endl;
+//				cout << "not interpolated: " << i << ", " << j << Grid[i][j] << endl;
 				pqPoint point_interpolated = findMaximumInterpolated(point_i, Grid[i][j]);
 				pqCollection.push_back(point_interpolated);
 			}
@@ -283,7 +282,7 @@ pqPoint RetinaTrackFitter::getBestPQ() {
 			bestPQ = pqCollection[i];
 		}
 	}
-//	cout << " bestPQp " << bestPQ.p << "   bestPQq = " << bestPQ.q << " best w" << bestPQ.w << endl;
+//	cout << " bestPQp " << bestPQ.p << "   bestPQq = " << bestPQ.q << " best w " << bestPQ.w << endl;
 	return bestPQ;
 }
 

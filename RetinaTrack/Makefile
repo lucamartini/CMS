@@ -24,12 +24,15 @@ CXX	         += -I$(INCLUDEDIR)
 # TARGETS #
 ###########
 
-all: Retina RetinaSimple
+all: Retina RetinaSimple RetinaRZ
 
 Retina: Retina.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o
 	$(CXX) -o $@ $^  $(LDFLAGS) $(GLIBS)
 
 RetinaSimple: RetinaSimple.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o
+	$(CXX) -o $@ $^  $(LDFLAGS) $(GLIBS)
+
+RetinaRZ: RetinaRZ.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o
 	$(CXX) -o $@ $^  $(LDFLAGS) $(GLIBS)
 
 Retina.o: Retina.cc print.h
@@ -56,7 +59,10 @@ LayerGeometry.o: LayerGeometry.cpp LayerGeometry.h
 CommonFuncs.o: CommonFuncs.cpp CommonFuncs.h
 	$(CXX) $(CXXFLAGS) -c CommonFuncs.cpp -o $@
 
+Res: Res.cc
+	$(CXX) $(CXXFLAGS) Res.cc -o Res  $(LDFLAGS) $(GLIBS)
+
 clean:
-	rm -f Retina RetinaSimple Retina.o RetinaSimple.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o
+	rm -f Retina RetinaSimple RetinaRZ Retina.o RetinaSimple.o RetinaRZ.o LayerGeometry.o HitCollection.o HitsGenerator.o ConformalTransf.o RetinaTrackFitter.o CommonFuncs.o Res
 
 

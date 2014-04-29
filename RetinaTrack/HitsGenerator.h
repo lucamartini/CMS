@@ -16,8 +16,6 @@
 #include "LayerGeometry.h"
 #include "HitCollection.h"
 
-enum geometry {plain, cylinder};
-
 class HitsGenerator {
 public:
 	HitsGenerator(LayerGeometry LG_, geometry geo_, string name_);
@@ -30,6 +28,7 @@ public:
 	void addHit(double x);
 	void addCircle(double R_gen, double phi0_gen, bool random_leg = false);
 	void addLine(double phi0_gen, double b = 0.);
+	void addLineRZ(double theta0, double z0);
 
 	inline void print_hit(hit hit) { std::cout << "x = " << hit.x << "; y = " << hit.x << std::endl;}
 

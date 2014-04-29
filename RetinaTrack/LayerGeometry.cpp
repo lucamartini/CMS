@@ -7,7 +7,7 @@
 
 #include "LayerGeometry.h"
 
-LayerGeometry::LayerGeometry() {
+LayerGeometry::LayerGeometry() : max_z(115.) {
 	setLayersR();
 	setLayersPlain();
 	setLayersCylinder();

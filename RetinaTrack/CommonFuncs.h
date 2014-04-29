@@ -25,6 +25,9 @@
 #include "TLatex.h"
 #include "TFitResult.h"
 #include "TFitResultPtr.h"
+#include "TMath.h"
+
+enum geometry {plain, cylinder};
 
 struct hitConf {
 	double u;
@@ -51,6 +54,9 @@ inline double get_x_from_pol(double r, double phi) { return r*cos(phi);};
 inline double get_y_from_pol(double r, double phi) { return r*sin(phi);};
 inline double get_r_from_car(double x, double y) { return sqrt(x*x + y*y);};
 inline double get_phi_from_car(double x, double y) { return atan2(y,x);}; // { return acos(x / get_r_from_car(x, y));}; // { return atan(y/x);};
+
+const double zmax = 1.1*115.;
+const double rmax = 1.1*108.;
 
 extern double pi;
 

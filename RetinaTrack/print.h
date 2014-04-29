@@ -19,8 +19,8 @@ void drawTracks(HitCollection hitCollection, vector <pqPoint> pqCollection, pqPo
 		hits_h.SetPoint(hit_i, hitcollref->at(hit_i).x, hitcollref->at(hit_i).y);
 	}
 	TCanvas c("c", "c", 600, 600);
-	hits_h.GetXaxis()->SetLimits(0., hits_h.GetXaxis()->GetXmax());
-	hits_h.GetYaxis()->SetRangeUser(0., hits_h.GetYaxis()->GetXmax());
+	hits_h.GetXaxis()->SetLimits(-1.1*zmax, 1.1*zmax);
+	hits_h.GetYaxis()->SetRangeUser(0., 1.1*rmax);
 	hits_h.GetXaxis()->SetTitle("x[cm]");
 	hits_h.GetYaxis()->SetTitle("y[cm]");
 	hits_h.Draw("A*");
@@ -40,7 +40,7 @@ void drawTracks(HitCollection hitCollection, vector <pqPoint> pqCollection, pqPo
 			m = (y1 - y0) / (2 * pqCollection[line_i].q);
 			b = y0 - m*(pqCollection[line_i].p - pqCollection[line_i].q);
 		}
-		lines[line_i] = new TF1(Form("line_%d", line_i), Form("%f*x+%f", m, b), 0, max(1200., hitCollection.highestX()));
+		lines[line_i] = new TF1(Form("line_%d", line_i), Form("%f*x+%f", m, b), -1.1*zmax, 1.1*zmax);
 		if (line_i == best) {
 			lines[line_i]->SetLineColor(kRed);
 			TLatex Tl;

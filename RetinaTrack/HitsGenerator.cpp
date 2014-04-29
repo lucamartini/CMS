@@ -93,7 +93,6 @@ void HitsGenerator::addLine(double phi, double b) {
 		double y;
 		if (geo == cylinder) {
 			double r = LG.get_barrel_layers_cylinder()[i].R;
-//			double m = (r*sin(phi) - b)/(r*cos(phi));
 			double sqr = r*r + tan(phi)*tan(phi)*r*r - b*b;
 			x = (-tan(phi)*b + sqrt(sqr))*cos(phi)*cos(phi);
 			y = tan(phi)*x + b;
@@ -104,6 +103,27 @@ void HitsGenerator::addLine(double phi, double b) {
 			x = (y-b)/m;
 		}
 
+		hit hit_i;
+		hit_i.x = x;
+		hit_i.y = y;
+		hitCollection.addHit(hit_i);
+	}
+}
+
+void HitsGenerator::addLineRZ(double theta0, double z0) {
+	unsigned int  barrel_layer_size = LG.get_layer_size();
+	for (unsigned int i = 0; i < barrel_layer_size; i++) {
+		double x;
+		double y;
+		if (geo == plain) {
+			y = LG.get_barrel_layers_plain()[i].q;
+			double m = tan(theta0);
+			x = (y + m*z0)/m;
+		}
+		else {
+			cout << "RZ only with plain geometry!" << endl;
+			exit(EXIT_FAILURE);
+		}
 		hit hit_i;
 		hit_i.x = x;
 		hit_i.y = y;

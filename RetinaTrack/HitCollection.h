@@ -17,6 +17,7 @@
 #include "TF1.h"
 #include "TAxis.h"
 #include "TStyle.h"
+#include "TPaveStats.h"
 
 #include "CommonFuncs.h"
 
@@ -38,11 +39,16 @@ public:
 	unsigned int size() {return hitCollection.size();};
 	double highestX();
 	double highestY();
+	double lowestX();
+	double lowestY();
+	unsigned int getClosestHit();
+	unsigned int getFarthestHit();
+	hit * getHit(unsigned int i) {return &hitCollection.at(i);};
 	void addHit(hit hit) {hitCollection.push_back(hit);};
 	void printHits();
 
 	vector <hit> * getHitCollectionRef() {return &hitCollection;};
-	pqPoint drawHits(bool fit, bool draw = true);
+	pqPoint drawHits(bool fit, bool draw = true, bool rz = false);
 
 private:
 	string name;
